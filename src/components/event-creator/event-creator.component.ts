@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, signal, inject, computed } from '@angular/core';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WeddingEvent, Theme } from '../../models/event.model';
 import { EventService } from '../../services/event.service';
 import QRCode from 'qrcode';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-event-creator',
@@ -16,6 +18,8 @@ import QRCode from 'qrcode';
 export class EventCreatorComponent {
   private eventService = inject(EventService);
   private router = inject(Router);
+  private toastService = inject(ToastService);
+  private sanitizer = inject(DomSanitizer);
 
   coupleNames = signal('');
   eventDate = signal('');
@@ -24,6 +28,8 @@ export class EventCreatorComponent {
   strictMode = signal(false);
   selectedTheme = signal<'Owanbe Vibrant' | 'Royal Gold' | 'Modern Clean'>('Owanbe Vibrant');
   
+  isCreating = signal(false);
+
   // State for raw user input
   themeColorInputs = signal<string[]>(['#E91E63', '#009688']); // Default Owanbe colors (Pink/Teal)
   // State for validated, canonical hex color codes
@@ -36,6 +42,17 @@ export class EventCreatorComponent {
   createdEventData = signal<WeddingEvent | null>(null);
   qrNote = signal('Scan this code to upload your photos to our wedding album!');
   coverPhotoUrl = computed(() => this.eventService.event()?.coverPhotoUrl);
+  
+  cardBackgroundStyle = computed(() => {
+    // Prioritize local preview (blob URL) as it's instant and avoids CORS issues
+    const url = this.coverPhotoPreview() || this.coverPhotoUrl();
+    if (url) {
+      console.log('Setting card background to:', url);
+      // Bypass security for the background image URL (needed for blob: URLs)
+      return this.sanitizer.bypassSecurityTrustStyle(`url('${url}')`);
+    }
+    return null;
+  });
   
   hasErrors = computed(() => this.colorErrors().some(e => e !== null && e !== ''));
 
@@ -171,6 +188,7 @@ export class EventCreatorComponent {
     };
     
     try {
+      this.isCreating.set(true);
       // 1. Generate Event ID client-side
       const { v4: uuidv4 } = await import('uuid');
       const eventId = uuidv4();
@@ -180,12 +198,14 @@ export class EventCreatorComponent {
       if (this.coverPhotoFile()) {
         console.log('Cover photo selected, uploading...');
         uploadedCoverPhotoUrl = await this.eventService.uploadCoverPhoto(this.coverPhotoFile()!, eventId);
+        console.log('Cover photo upload finished. URL:', uploadedCoverPhotoUrl);
       } else {
         console.log('No cover photo selected.');
       }
 
       // 3. Generate QR code with real ID and Cover Photo
-      const finalQrCodeUrl = await this.generatePersonalizedQrCode(eventId, uploadedCoverPhotoUrl);
+      console.log('Calling generatePersonalizedQrCode...');
+      const finalQrCodeUrl = await this.generatePersonalizedQrCode(eventId, uploadedCoverPhotoUrl, this.coverPhotoFile());
       this.qrCodeUrl.set(finalQrCodeUrl);
       
       // 4. Create Event with all data (ID, Cover URL, QR URL) in one go
@@ -201,10 +221,13 @@ export class EventCreatorComponent {
       // Update local state
       this.createdEventData.set(finalEventData);
       this.showQrCode.set(true);
+      this.toastService.show('Event created successfully!', 'success');
       
     } catch (err) {
       console.error(err);
-      alert('Failed to create event.');
+      this.toastService.show('Failed to create event. Please try again.', 'error');
+    } finally {
+      this.isCreating.set(false);
     }
   }
 
@@ -239,7 +262,10 @@ export class EventCreatorComponent {
   private loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const image = new Image();
-      image.crossOrigin = 'anonymous'; // Enable CORS
+      // Only set crossOrigin for non-blob URLs to avoid potential issues
+      if (!src.startsWith('blob:')) {
+        image.crossOrigin = 'anonymous'; 
+      }
       image.onload = () => resolve(image);
       image.onerror = (err) => {
         console.error('Failed to load image for QR code:', src, err);
@@ -249,8 +275,8 @@ export class EventCreatorComponent {
     });
   }
 
-  private async generatePersonalizedQrCode(eventId: string, coverPhotoUrl: string | null): Promise<string> {
-    console.log('Generating QR code for event:', eventId, 'with cover:', coverPhotoUrl);
+  private async generatePersonalizedQrCode(eventId: string, coverPhotoUrl: string | null, localFile?: File | null): Promise<string> {
+    console.log('Generating QR code. EventId:', eventId, 'CoverUrl:', coverPhotoUrl, 'LocalFile:', localFile);
     const guestViewUrl = `${window.location.origin}/event/${eventId}`;
     let primaryColor = this.themeColors()[0] || '#000000';
     let secondaryColor = this.themeColors()[1] || '#FFFFFF';
@@ -280,12 +306,29 @@ export class EventCreatorComponent {
         throw new Error('Could not get canvas context');
     }
 
+    // 1. Fill Background with Secondary Color (White/Theme Light)
     ctx.fillStyle = secondaryColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // 2. Draw QR Code
     const image = await this.loadImage(baseQrCodeUrl);
     ctx.drawImage(image, 0, 0);
 
+    // 3. Draw Center Initials
+    const centerRectSize = canvas.width * 0.4;
+    const centerPos = (canvas.width - centerRectSize) / 2;
+
+    // Draw center background (Solid)
+    ctx.fillStyle = secondaryColor;
+    ctx.fillRect(centerPos, centerPos, centerRectSize, centerRectSize);
+
+    // Draw Initials
+    this.drawInitials(ctx, centerRectSize, primaryColor);
+    
+    return canvas.toDataURL('image/png');
+  }
+
+  private drawInitials(ctx: CanvasRenderingContext2D, centerRectSize: number, color: string): void {
     const getInitials = (names: string): string => {
         if (!names) return '';
         return names.split(/and|&/i)
@@ -293,15 +336,10 @@ export class EventCreatorComponent {
             .join(' & ');
     };
     const initials = getInitials(this.coupleNames());
-    
-    const centerRectSize = canvas.width * 0.4;
-    const centerPos = (canvas.width - centerRectSize) / 2;
-    ctx.fillStyle = secondaryColor;
-    ctx.fillRect(centerPos, centerPos, centerRectSize, centerRectSize);
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = primaryColor;
+    ctx.fillStyle = color;
     
     let fontSize = 48;
     ctx.font = `bold ${fontSize}px 'Playfair Display', serif`;
@@ -311,9 +349,7 @@ export class EventCreatorComponent {
         ctx.font = `bold ${fontSize}px 'Playfair Display', serif`;
     }
 
-    ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
-    
-    return canvas.toDataURL('image/png');
+    ctx.fillText(initials, 256 / 2, 256 / 2);
   }
 
   printQrCode(): void {

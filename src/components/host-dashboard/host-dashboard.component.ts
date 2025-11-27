@@ -21,8 +21,11 @@ export class HostDashboardComponent {
   photos = this.photoService.photos;
   
   coverPhotoUrl = signal<string | null>(this.eventService.event()?.coverPhotoUrl || null);
+  qrCodeUrl = signal<string | null>(this.eventService.event()?.qrCodeUrl || null);
   slideshowUrl = this.getSlideshowUrl();
+  guestUrl = this.getGuestUrl();
   isLinkCopied = signal(false);
+  isGuestLinkCopied = signal(false);
   
   recentEvents = signal<any[]>([]);
 
@@ -38,6 +41,8 @@ export class HostDashboardComponent {
   switchEvent(event: any) {
     this.eventService.setEvent(event);
     this.coverPhotoUrl.set(event.coverPhotoUrl);
+    this.qrCodeUrl.set(event.qrCodeUrl);
+    this.guestUrl = this.getGuestUrl(); // Update guest URL
     // Reload photos for the new event
     // The PhotoService effect should handle this if it depends on eventService.event()
   }
@@ -46,10 +51,25 @@ export class HostDashboardComponent {
     return `${window.location.origin}${window.location.pathname}?view=slideshow`;
   }
 
+  private getGuestUrl(): string {
+    const eventId = this.eventService.event()?.id;
+    return eventId ? `${window.location.origin}/event/${eventId}` : '';
+  }
+
   copySlideshowLink(): void {
     navigator.clipboard.writeText(this.slideshowUrl).then(() => {
       this.isLinkCopied.set(true);
       setTimeout(() => this.isLinkCopied.set(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy link: ', err);
+      alert('Failed to copy link.');
+    });
+  }
+
+  copyGuestLink(): void {
+    navigator.clipboard.writeText(this.guestUrl).then(() => {
+      this.isGuestLinkCopied.set(true);
+      setTimeout(() => this.isGuestLinkCopied.set(false), 2000);
     }).catch(err => {
       console.error('Failed to copy link: ', err);
       alert('Failed to copy link.');
