@@ -1,0 +1,157 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  
+  <!-- Left Sidebar -->
+  <div class="w-80 bg-white shadow-lg flex flex-col z-20">
+    <div class="p-4 border-b">
+      <h2 class="text-xl font-bold font-serif text-gray-800">Book Editor</h2>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="flex border-b">
+      <div class="flex-1 text-center sidebar-tab" 
+           [class.active]="activeTab() === 'gallery'"
+           (click)="activeTab.set('gallery')">
+        Gallery
+      </div>
+      <div class="flex-1 text-center sidebar-tab" 
+           [class.active]="activeTab() === 'uploads'"
+           (click)="activeTab.set('uploads')">
+        Uploads
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-4">
+      @if (activeTab() === 'gallery') {
+        <div class="grid grid-cols-2 gap-2">
+          @for (photo of photoService.photos(); track photo.id) {
+            <div class="aspect-square rounded-md overflow-hidden cursor-move hover:opacity-80 transition-opacity"
+                 draggable="true"
+                 (dragstart)="onDragStart($event, 'image', photo.imageUrl)">
+              <img [src]="photo.imageUrl" class="w-full h-full object-cover">
+            </div>
+          }
+          @if (photoService.photos().length === 0) {
+            <p class="col-span-2 text-center text-gray-500 mt-4">No guest photos yet.</p>
+          }
+        </div>
+      } @else {
+        <div class="space-y-4">
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors">
+            <input type="file" id="fileUpload" class="hidden" accept="image/*,.heic" (change)="onFileUpload($event)">
+            <label for="fileUpload" class="cursor-pointer flex flex-col items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span class="text-sm text-gray-600">Click to upload</span>
+              <span class="text-xs text-gray-400 mt-1">JPG, PNG, HEIC supported</span>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            @for (url of uploadedPhotos(); track url) {
+              <div class="aspect-square rounded-md overflow-hidden cursor-move hover:opacity-80 transition-opacity"
+                   draggable="true"
+                   (dragstart)="onDragStart($event, 'image', url)">
+                <img [src]="url" class="w-full h-full object-cover">
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Main Workspace -->
+  <div class="flex-1 flex flex-col relative">
+    <!-- Top Bar -->
+    <div class="h-14 bg-white border-b flex items-center justify-between px-6 shadow-sm z-10">
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-gray-500">Page {{ bookService.currentPageIndex() + 1 }} of {{ bookService.pages().length }}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button (click)="showPreview.set(true)" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors">
+          Preview Book
+        </button>
+      </div>
+    </div>
+
+    <!-- Canvas Area -->
+    <div class="flex-1 bg-gray-100 overflow-auto flex items-center justify-center p-8" 
+         #canvasContainer
+         (dragover)="onDragOver($event)" 
+         (drop)="onDrop($event)">
+      
+      <!-- The A4 Page -->
+      <div class="a4-canvas transition-transform duration-200"
+           [style.transform]="'scale(' + zoomLevel() + ')'">
+        
+        @for (element of currentElements(); track element.id) {
+          <div ngDraggable ngResizable
+               class="absolute group book-element"
+               [style.z-index]="element.zIndex"
+               [position]="{x: element.x, y: element.y}"
+               [preventDefaultEvent]="true"
+               (endOffset)="onElementMove(element, $event)"
+               (rzStop)="onElementResize(element, $event)"
+               [rzContainment]="'.a4-canvas'"
+               [bounds]="'.a4-canvas'"
+               [style.width.px]="element.width"
+               [style.height.px]="element.height">
+            
+            <!-- Image Content -->
+            @if (element.type === 'image') {
+              <img [src]="element.src" class="w-full h-full object-cover pointer-events-none select-none shadow-sm">
+            }
+
+            <!-- Text Content -->
+            @if (element.type === 'text') {
+              <div class="w-full h-full p-2 border border-dashed border-gray-300">{{ element.content }}</div>
+            }
+
+            <!-- Controls (Visible on Hover) -->
+            <button (click)="deleteElement(element.id)" 
+                    class="element-handle absolute -top-3 -right-3 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 z-50 cursor-pointer">
+              &times;
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="h-16 bg-white border-t flex items-center justify-center gap-4 z-10">
+      <button (click)="bookService.prevPage()" 
+              [disabled]="!bookService.canGoPrev()"
+              class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      
+      <span class="font-medium text-gray-700">Page {{ bookService.currentPageIndex() + 1 }}</span>
+      
+      <button (click)="bookService.nextPage()" 
+              [disabled]="!bookService.canGoNext()"
+              class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <div class="w-px h-8 bg-gray-300 mx-2"></div>
+
+      <button (click)="bookService.addPage()" class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Page
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+@if (showPreview()) {
+  <app-book-preview (close)="showPreview.set(false)"></app-book-preview>
+}

@@ -1,0 +1,64 @@
+<div class="flex min-h-screen items-center justify-center relative overflow-hidden">
+  <!-- Background Effects -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+    <div class="absolute top-20 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-float" style="animation-delay: 0s;"></div>
+    <div class="absolute bottom-40 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-float" style="animation-delay: -2s;"></div>
+  </div>
+
+  <div class="w-full max-w-md space-y-8 p-6">
+    <div class="text-center">
+      <a href="#" class="inline-flex items-center gap-2 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        </div>
+        <span class="text-3xl font-bold tracking-tight text-white">fotoFlow</span>
+      </a>
+      <h2 class="text-2xl font-bold tracking-tight text-white">Welcome back</h2>
+      <p class="mt-2 text-sm text-slate-400">Sign in to manage your event and photos</p>
+    </div>
+
+    <div class="glass-panel p-8 rounded-2xl shadow-2xl">
+      <div class="space-y-6">
+        <div>
+          <button (click)="loginWithGoogle()" type="button" class="w-full flex justify-center items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors">
+            <svg class="h-5 w-5" viewBox="0 0 48 48"><title>Google Logo</title><clipPath id="g"><path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></clipPath><g clip-path="url(#g)"><path fill="#FBBC05" d="M0 37V11l17 13z"/><path fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z"/><path fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z"/><path fill="#4285F4" d="M48 48L17 24l-4-3 35-10z"/></g></svg>
+            Sign in with Google
+          </button>
+        </div>
+
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-700"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="bg-slate-800 px-2 text-slate-400 rounded">Or continue with email</span>
+          </div>
+        </div>
+
+        <form (ngSubmit)="login()" class="space-y-4">
+          <div>
+            <label for="email" class="sr-only">Email address</label>
+            <input id="email" name="email" type="email" [(ngModel)]="email" autocomplete="email" required class="block w-full rounded-xl border-0 bg-slate-900/50 py-3 px-4 text-white shadow-sm ring-1 ring-inset ring-slate-700 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all" placeholder="Email address">
+          </div>
+          <div>
+            <label for="password" class="sr-only">Password</label>
+            <input id="password" name="password" type="password" [(ngModel)]="password" autocomplete="current-password" required class="block w-full rounded-xl border-0 bg-slate-900/50 py-3 px-4 text-white shadow-sm ring-1 ring-inset ring-slate-700 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all" placeholder="Password">
+          </div>
+
+          <div>
+            <button type="submit" class="w-full flex justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 px-3 py-3 text-sm font-bold leading-6 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] transition-all duration-200">
+              Sign in
+            </button>
+          </div>
+        </form>
+        
+        <div class="text-center">
+            <p class="text-sm text-slate-400">
+                Don't have an account? 
+                <button (click)="goToSignup()" class="text-indigo-400 hover:text-indigo-300 font-semibold">Sign up</button>
+            </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
