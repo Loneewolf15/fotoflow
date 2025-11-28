@@ -1,9 +1,9 @@
 <div class="min-h-screen w-full bg-slate-900 text-white flex flex-col items-center justify-center text-center transition-all duration-300 p-4 relative overflow-hidden">
   
   <!-- Background Image Layer -->
-  @if (event()?.coverPhotoUrl) {
+  @if (coverPhotoStyle()) {
     <div class="absolute inset-0 bg-cover bg-center z-0 transition-opacity duration-1000"
-         [style.background-image]="'url(' + event()!.coverPhotoUrl + ')'">
+         [style.background-image]="coverPhotoStyle()">
     </div>
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
   }

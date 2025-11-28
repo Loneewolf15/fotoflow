@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output, signal, inject, ViewChild, ElementRef, OnInit, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal, inject, ViewChild, ElementRef, OnInit, effect, computed } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -48,6 +49,16 @@ export class GuestViewComponent implements OnInit {
   eventStatus = signal<'upcoming' | 'active' | 'ended'>('active');
   validationError = signal<string | null>(null);
   isLoading = signal(true);
+  
+  private sanitizer = inject(DomSanitizer);
+  
+  coverPhotoStyle = computed(() => {
+    const url = this.event()?.coverPhotoUrl;
+    if (url) {
+      return this.sanitizer.bypassSecurityTrustStyle(`url('${url}')`);
+    }
+    return null;
+  });
 
   readonly BLUR_THRESHOLD = 100;
   readonly isShareApiAvailable = !!navigator.share;
