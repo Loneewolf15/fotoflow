@@ -148,8 +148,11 @@ export class EventCreatorComponent {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
+      console.log('EventCreator: File selected:', file.name);
       this.coverPhotoFile.set(file);
       this.coverPhotoPreview.set(URL.createObjectURL(file));
+    } else {
+      console.log('EventCreator: No file selected in input');
     }
   }
 
@@ -189,30 +192,44 @@ export class EventCreatorComponent {
     
     try {
       this.isCreating.set(true);
-      // 1. Generate Event ID client-side
-      const { v4: uuidv4 } = await import('uuid');
-      const eventId = uuidv4();
+      console.log('EventCreator: Starting creation. CoverFile:', this.coverPhotoFile()?.name);
+      // 1. Determine Event ID (Reuse existing if available, otherwise generate new)
+      const existingEvent = this.eventService.event();
+      let eventId = existingEvent?.id;
       
-      // 2. Upload Cover Photo if selected (using the generated ID)
-      let uploadedCoverPhotoUrl = null;
-      if (this.coverPhotoFile()) {
-        console.log('Cover photo selected, uploading...');
-        uploadedCoverPhotoUrl = await this.eventService.uploadCoverPhoto(this.coverPhotoFile()!, eventId);
-        console.log('Cover photo upload finished. URL:', uploadedCoverPhotoUrl);
+      if (!eventId) {
+          const { v4: uuidv4 } = await import('uuid');
+          eventId = uuidv4();
+          console.log('Generated new Event ID:', eventId);
       } else {
-        console.log('No cover photo selected.');
+          console.log('Reusing existing Event ID:', eventId);
+      }
+      
+      // 2. Handle Cover Photo
+      // If user selected a new file, upload it.
+      // Otherwise, keep the existing URL (if any).
+      let finalCoverPhotoUrl = existingEvent?.coverPhotoUrl || null;
+
+      if (this.coverPhotoFile()) {
+        console.log('New cover photo selected, uploading...');
+        finalCoverPhotoUrl = await this.eventService.uploadCoverPhoto(this.coverPhotoFile()!, eventId);
+        console.log('Cover photo upload finished. URL:', finalCoverPhotoUrl);
+      } else if (finalCoverPhotoUrl) {
+        console.log('Using existing cover photo from dashboard:', finalCoverPhotoUrl);
+      } else {
+        console.log('No cover photo selected or existing.');
       }
 
       // 3. Generate QR code with real ID and Cover Photo
       console.log('Calling generatePersonalizedQrCode...');
-      const finalQrCodeUrl = await this.generatePersonalizedQrCode(eventId, uploadedCoverPhotoUrl, this.coverPhotoFile());
+      const finalQrCodeUrl = await this.generatePersonalizedQrCode(eventId!, finalCoverPhotoUrl, this.coverPhotoFile());
       this.qrCodeUrl.set(finalQrCodeUrl);
       
       // 4. Create Event with all data (ID, Cover URL, QR URL) in one go
       const finalEventData: WeddingEvent = {
         ...eventData,
         id: eventId,
-        coverPhotoUrl: uploadedCoverPhotoUrl,
+        coverPhotoUrl: finalCoverPhotoUrl,
         qrCodeUrl: finalQrCodeUrl
       };
 
@@ -221,6 +238,8 @@ export class EventCreatorComponent {
       // Update local state
       this.createdEventData.set(finalEventData);
       this.showQrCode.set(true);
+      // Clear the local preview so the view falls back to the remote URL (now confirmed uploaded)
+      this.coverPhotoPreview.set(null);
       this.toastService.show('Event created successfully!', 'success');
       
     } catch (err) {

@@ -22,44 +22,11 @@ export class EventService {
   async createEvent(eventData: WeddingEvent): Promise<string> {
     const currentUser = this.authService.currentUser();
     
-    // Check if event with same couple names exists for this user
-    const { data: existingEvents } = await this.supabase
+    // Use upsert to handle both creation and updates based on the ID
+    const { data, error } = await this.supabase
         .from('events')
-        .select('id')
-        .eq('owner_id', currentUser?.uid)
-        .eq('couple_names', eventData.coupleNames);
-
-    let resultData;
-    let resultError;
-
-    if (existingEvents && existingEvents.length > 0) {
-        // Update existing event
-        const existingId = existingEvents[0].id;
-        console.log(`Event for ${eventData.coupleNames} already exists (${existingId}). Updating...`);
-        
-        const { data, error } = await this.supabase
-            .from('events')
-            .update({
-                event_date: eventData.eventDate,
-                start_time: eventData.startTime,
-                end_time: eventData.endTime,
-                theme: eventData.theme,
-                cover_photo_url: eventData.coverPhotoUrl,
-                strict_mode: eventData.strictMode,
-                qr_code_url: eventData.qrCodeUrl
-            })
-            .eq('id', existingId)
-            .select()
-            .single();
-            
-        resultData = data;
-        resultError = error;
-    } else {
-        // Insert new event
-        const { data, error } = await this.supabase
-          .from('events')
-          .insert({
-            id: eventData.id, // Use provided ID if available
+        .upsert({
+            id: eventData.id,
             owner_id: currentUser?.uid,
             couple_names: eventData.coupleNames,
             event_date: eventData.eventDate,
@@ -69,20 +36,16 @@ export class EventService {
             cover_photo_url: eventData.coverPhotoUrl,
             strict_mode: eventData.strictMode,
             qr_code_url: eventData.qrCodeUrl
-          })
-          .select()
-          .single();
+        })
+        .select()
+        .single();
           
-        resultData = data;
-        resultError = error;
+    if (error) {
+      console.error("Error creating/updating event:", error);
+      throw error;
     }
 
-    if (resultError) {
-      console.error("Error creating/updating event:", resultError);
-      throw resultError;
-    }
-
-    const newEvent = this.mapSupabaseEvent(resultData);
+    const newEvent = this.mapSupabaseEvent(data);
     this._event.set(newEvent);
     localStorage.setItem('currentEventId', newEvent.id!);
     return newEvent.id!;

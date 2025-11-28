@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, output, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, output, inject, signal, computed } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
@@ -17,10 +18,20 @@ export class HostDashboardComponent {
   photoService = inject(PhotoService);
   eventService = inject(EventService);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
 
   photos = this.photoService.photos;
   
   coverPhotoUrl = signal<string | null>(this.eventService.event()?.coverPhotoUrl || null);
+  
+  coverPhotoStyle = computed(() => {
+    const url = this.coverPhotoUrl();
+    if (url) {
+      return this.sanitizer.bypassSecurityTrustStyle(`url('${url}')`);
+    }
+    return null;
+  });
+
   qrCodeUrl = signal<string | null>(this.eventService.event()?.qrCodeUrl || null);
   slideshowUrl = this.getSlideshowUrl();
   guestUrl = this.getGuestUrl();
