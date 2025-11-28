@@ -113,6 +113,10 @@ export class GuestViewComponent implements OnInit {
     return this.geminiService.isConfigured();
   }
 
+  get isHost(): boolean {
+      return !!this.authService.currentUser();
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {

@@ -93,7 +93,7 @@
                     <div>
                       <div class="flex items-center gap-x-2">
                         <div class="flex-grow flex items-center gap-x-2 rounded-xl border bg-slate-900/50 pl-3 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 transition-all" [class.border-red-500]="colorErrors()[$index]" [class.border-slate-700]="!colorErrors()[$index]">
-                          <span class="h-5 w-5 rounded-full shrink-0 border border-white/20" [style.background-color]="themeColors()[$index]"></span>
+                          <input type="color" [value]="themeColors()[$index]" (input)="onColorPickerChange($index, $event)" class="h-8 w-8 rounded-full border-none bg-transparent cursor-pointer p-0">
                           <input type="text" [id]="'primaryColor-' + $index" [name]="'primaryColor-' + $index" [ngModel]="themeColorInputs()[$index]" (ngModelChange)="updateColorInput($index, $event)" (blur)="validateAndCommitColor($index)" placeholder="e.g., gold, #ca8a04" class="block w-full border-0 p-2.5 text-white placeholder:text-slate-500 focus:ring-0 sm:text-sm bg-transparent">
                         </div>
                         @if (themeColorInputs().length > 1) {

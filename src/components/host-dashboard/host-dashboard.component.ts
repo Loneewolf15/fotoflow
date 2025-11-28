@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { PhotoService } from '../../services/photo.service';
 import { EventService } from '../../services/event.service';
+import { QrCodeService } from '../../services/qr-code.service';
 
 @Component({
   selector: 'app-host-dashboard',
@@ -19,6 +20,7 @@ export class HostDashboardComponent {
   eventService = inject(EventService);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
+  private qrCodeService = inject(QrCodeService);
 
   photos = this.photoService.photos;
   
@@ -47,6 +49,19 @@ export class HostDashboardComponent {
   async loadRecentEvents() {
     const events = await this.eventService.getEvents();
     this.recentEvents.set(events);
+    
+    let currentEvent = this.eventService.event();
+
+    // If no event is selected but we have events, select the first one (most recent)
+    if (!currentEvent && events.length > 0) {
+        this.eventService.setEvent(events[0]);
+        currentEvent = events[0];
+    }
+    
+    // If we have a current event (loaded by service or just set), regenerate its QR code too
+    if (currentEvent && currentEvent.coverPhotoUrl) {
+        this.regenerateQrCode(currentEvent);
+    }
   }
 
   switchEvent(event: any) {
@@ -54,8 +69,26 @@ export class HostDashboardComponent {
     this.coverPhotoUrl.set(event.coverPhotoUrl);
     this.qrCodeUrl.set(event.qrCodeUrl);
     this.guestUrl = this.getGuestUrl(); // Update guest URL
-    // Reload photos for the new event
-    // The PhotoService effect should handle this if it depends on eventService.event()
+    
+    // Auto-regenerate QR code to ensure it has the latest cover photo style
+    if (event.coverPhotoUrl) {
+        this.regenerateQrCode(event);
+    }
+  }
+
+  private async regenerateQrCode(event: any) {
+      try {
+          const newQrCodeUrl = await this.qrCodeService.generatePersonalizedQrCode(
+              event.id,
+              event.coupleNames,
+              event.theme.colors,
+              event.coverPhotoUrl,
+              null // No local file, use URL
+          );
+          this.qrCodeUrl.set(newQrCodeUrl);
+      } catch (err) {
+          console.error('Failed to regenerate QR code', err);
+      }
   }
 
   private getSlideshowUrl(): string {
@@ -97,6 +130,31 @@ export class HostDashboardComponent {
         // For now, just upload
         const url = await this.eventService.uploadCoverPhoto(file);
         this.coverPhotoUrl.set(url);
+        
+        // Regenerate QR Code with new cover photo
+        const currentEvent = this.eventService.event();
+        if (currentEvent) {
+             const newQrCodeUrl = await this.qrCodeService.generatePersonalizedQrCode(
+                 currentEvent.id!,
+                 currentEvent.coupleNames,
+                 currentEvent.theme.colors,
+                 url,
+                 file
+             );
+             this.qrCodeUrl.set(newQrCodeUrl);
+             
+             // Update event in service/backend with new QR code URL
+             // Note: Ideally backend should handle this, but for now we do it client-side
+             // We need a way to update the event's QR code URL in the DB.
+             // For now, let's just update the local state and the QR code display.
+             // If we want to persist the new QR code image itself, we'd need to upload it too.
+             // But since it's a data URL, we might just be storing the base64 or regenerating it.
+             // The current implementation stores the data URL in the event object.
+             // So we should update the event.
+             const updatedEvent = { ...currentEvent, coverPhotoUrl: url, qrCodeUrl: newQrCodeUrl };
+             await this.eventService.createEvent(updatedEvent); // Upsert updates
+        }
+
       } catch (error) {
         console.error('Failed to upload cover photo', error);
         alert('Failed to upload cover photo. Please try again.');
@@ -105,8 +163,12 @@ export class HostDashboardComponent {
   }
 
   generatePdf(): void {
-    // Placeholder for premium PDF generation feature
-    alert('PDF Album Generation is a premium feature coming soon!');
+    // For now, trigger the print view which acts as a PDF generator
+    this.printQrCode();
+  }
+  
+  printQrCode(): void {
+      window.print();
   }
 
   logout(): void {

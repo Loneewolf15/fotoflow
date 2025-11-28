@@ -7,6 +7,7 @@ import { WeddingEvent, Theme } from '../../models/event.model';
 import { EventService } from '../../services/event.service';
 import QRCode from 'qrcode';
 import { ToastService } from '../../services/toast.service';
+import { QrCodeService } from '../../services/qr-code.service';
 
 @Component({
   selector: 'app-event-creator',
@@ -20,6 +21,7 @@ export class EventCreatorComponent {
   private router = inject(Router);
   private toastService = inject(ToastService);
   private sanitizer = inject(DomSanitizer);
+  private qrCodeService = inject(QrCodeService);
 
   coupleNames = signal('');
   eventDate = signal('');
@@ -82,7 +84,7 @@ export class EventCreatorComponent {
   }
 
   validateAndCommitColor(index: number): void {
-    const rawColor = this.themeColorInputs()[index]?.trim();
+    let rawColor = this.themeColorInputs()[index]?.trim();
 
     if (!rawColor) {
         this.colorErrors.update(errors => {
@@ -93,13 +95,19 @@ export class EventCreatorComponent {
         return;
     }
 
-    if (CSS.supports('color', rawColor)) {
-      const hexColor = this.colorToHex(rawColor);
+    // Normalize: Remove spaces to handle "Lemon Green" -> "LemonGreen"
+    const normalizedColor = rawColor.replace(/\s+/g, '');
+
+    if (CSS.supports('color', normalizedColor)) {
+      const hexColor = this.colorToHex(normalizedColor);
       this.themeColors.update(current => {
         const newColors = [...current];
         newColors[index] = hexColor;
         return newColors;
       });
+      // Update input to normalized value or keep raw? 
+      // Let's keep raw for user context but maybe update to hex if they blur?
+      // For now, let's update to the hex to be clean.
       this.themeColorInputs.update(current => {
           const newInputs = [...current];
           newInputs[index] = hexColor;
@@ -117,6 +125,27 @@ export class EventCreatorComponent {
         return newErrors;
       });
     }
+  }
+
+  onColorPickerChange(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const color = input.value;
+    
+    this.themeColors.update(current => {
+        const newColors = [...current];
+        newColors[index] = color;
+        return newColors;
+    });
+    this.themeColorInputs.update(current => {
+        const newInputs = [...current];
+        newInputs[index] = color;
+        return newInputs;
+    });
+    this.colorErrors.update(errors => {
+        const newErrors = [...errors];
+        newErrors[index] = null;
+        return newErrors;
+    });
   }
 
   private colorToHex(color: string): string {
@@ -160,13 +189,18 @@ export class EventCreatorComponent {
     this.themeColorInputs().forEach((_, index) => this.validateAndCommitColor(index));
     
     if (this.hasErrors()) {
-      alert('Please fix invalid colors before creating the event.');
+      this.toastService.show('Please fix invalid colors before creating the event.', 'error');
       return;
     }
     
     if (!this.coupleNames() || !this.startTime() || !this.endTime()) {
-      alert('Please fill in all fields.');
+      this.toastService.show('Please fill in all fields.', 'error');
       return;
+    }
+
+    if (new Date(this.endTime()) <= new Date(this.startTime())) {
+        this.toastService.show('End Time must be later than Start Time.', 'error');
+        return;
     }
     
     const themeClass = this.themes.find(t => t.name === this.selectedTheme())?.class || 'theme-modern';
@@ -222,7 +256,13 @@ export class EventCreatorComponent {
 
       // 3. Generate QR code with real ID and Cover Photo
       console.log('Calling generatePersonalizedQrCode...');
-      const finalQrCodeUrl = await this.generatePersonalizedQrCode(eventId!, finalCoverPhotoUrl, this.coverPhotoFile());
+      const finalQrCodeUrl = await this.qrCodeService.generatePersonalizedQrCode(
+        eventId!, 
+        this.coupleNames(), 
+        this.themeColors(), 
+        finalCoverPhotoUrl, 
+        this.coverPhotoFile()
+      );
       this.qrCodeUrl.set(finalQrCodeUrl);
       
       // 4. Create Event with all data (ID, Cover URL, QR URL) in one go
@@ -248,127 +288,6 @@ export class EventCreatorComponent {
     } finally {
       this.isCreating.set(false);
     }
-  }
-
-  private hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-  }
-
-  private getLuminance(r: number, g: number, b: number): number {
-      const a = [r, g, b].map(v => {
-          v /= 255;
-          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-      });
-      return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
-  }
-
-  private getContrastRatio(hex1: string, hex2: string): number {
-      const rgb1 = this.hexToRgb(hex1);
-      const rgb2 = this.hexToRgb(hex2);
-      if (!rgb1 || !rgb2) return 1;
-      const lum1 = this.getLuminance(rgb1.r, rgb1.g, rgb1.b);
-      const lum2 = this.getLuminance(rgb2.r, rgb2.g, rgb2.b);
-      const lighter = Math.max(lum1, lum2);
-      const darker = Math.min(lum1, lum2);
-      return (lighter + 0.05) / (darker + 0.05);
-  }
-
-  private loadImage(src: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      // Only set crossOrigin for non-blob URLs to avoid potential issues
-      if (!src.startsWith('blob:')) {
-        image.crossOrigin = 'anonymous'; 
-      }
-      image.onload = () => resolve(image);
-      image.onerror = (err) => {
-        console.error('Failed to load image for QR code:', src, err);
-        reject(err);
-      };
-      image.src = src;
-    });
-  }
-
-  private async generatePersonalizedQrCode(eventId: string, coverPhotoUrl: string | null, localFile?: File | null): Promise<string> {
-    console.log('Generating QR code. EventId:', eventId, 'CoverUrl:', coverPhotoUrl, 'LocalFile:', localFile);
-    const guestViewUrl = `${window.location.origin}/event/${eventId}`;
-    let primaryColor = this.themeColors()[0] || '#000000';
-    let secondaryColor = this.themeColors()[1] || '#FFFFFF';
-
-    // const contrastRatio = this.getContrastRatio(primaryColor, secondaryColor);
-    // const MIN_CONTRAST_RATIO = 4.5;
-
-    // if (contrastRatio < MIN_CONTRAST_RATIO) {
-    //     console.warn(
-    //         `Chosen theme colors have a low contrast ratio of ${contrastRatio.toFixed(2)}:1. ` +
-    //         `Falling back to black and white for the QR code to ensure scannability.`
-    //     );
-    //     // primaryColor = '#000000';
-    //     // secondaryColor = '#FFFFFF';
-    // }
-
-    const baseQrCodeUrl = await QRCode.toDataURL(guestViewUrl, {
-        errorCorrectionLevel: 'H', type: 'image/png', width: 256, margin: 1,
-        color: { dark: primaryColor, light: '#00000000' }
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        throw new Error('Could not get canvas context');
-    }
-
-    // 1. Fill Background with Secondary Color (White/Theme Light)
-    ctx.fillStyle = secondaryColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // 2. Draw QR Code
-    const image = await this.loadImage(baseQrCodeUrl);
-    ctx.drawImage(image, 0, 0);
-
-    // 3. Draw Center Initials
-    const centerRectSize = canvas.width * 0.4;
-    const centerPos = (canvas.width - centerRectSize) / 2;
-
-    // Draw center background (Solid)
-    ctx.fillStyle = secondaryColor;
-    ctx.fillRect(centerPos, centerPos, centerRectSize, centerRectSize);
-
-    // Draw Initials
-    this.drawInitials(ctx, centerRectSize, primaryColor);
-    
-    return canvas.toDataURL('image/png');
-  }
-
-  private drawInitials(ctx: CanvasRenderingContext2D, centerRectSize: number, color: string): void {
-    const getInitials = (names: string): string => {
-        if (!names) return '';
-        return names.split(/and|&/i)
-            .map(name => name.trim().charAt(0).toUpperCase())
-            .join(' & ');
-    };
-    const initials = getInitials(this.coupleNames());
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = color;
-    
-    let fontSize = 48;
-    ctx.font = `bold ${fontSize}px 'Playfair Display', serif`;
-
-    while (ctx.measureText(initials).width > centerRectSize * 0.9 && fontSize > 10) {
-        fontSize--;
-        ctx.font = `bold ${fontSize}px 'Playfair Display', serif`;
-    }
-
-    ctx.fillText(initials, 256 / 2, 256 / 2);
   }
 
   printQrCode(): void {
