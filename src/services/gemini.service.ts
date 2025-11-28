@@ -2,15 +2,14 @@
 import { Injectable } from '@angular/core';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 
-// IMPORTANT: This service assumes `process.env.API_KEY` is set in the environment.
-// In a real application, you would proxy this through a backend to protect the key.
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GeminiService {
   private ai: GoogleGenAI | null = null;
-  private readonly apiKey = process.env.API_KEY;
+  private readonly apiKey = environment.geminiApiKey;
 
   constructor() {
     if (this.apiKey) {

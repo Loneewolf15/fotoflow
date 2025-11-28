@@ -47,6 +47,7 @@ export class GuestViewComponent implements OnInit {
   
   eventStatus = signal<'upcoming' | 'active' | 'ended'>('active');
   validationError = signal<string | null>(null);
+  isLoading = signal(true);
 
   readonly BLUR_THRESHOLD = 100;
   readonly isShareApiAvailable = !!navigator.share;
@@ -59,6 +60,26 @@ export class GuestViewComponent implements OnInit {
   }
 
   ngOnInit(): void {
+      console.log('GuestView: Initializing...');
+      
+      this.route.paramMap.subscribe(params => {
+        const id = params.get('id');
+        console.log('GuestView: Route ID:', id);
+        if (id) {
+            this.isLoading.set(true);
+            this.eventService.loadEvent(id).then(() => {
+                console.log('GuestView: Event loaded:', this.event());
+                this.checkEventStatus();
+                this.isLoading.set(false);
+            }).catch(err => {
+                console.error('GuestView: Error loading event', err);
+                this.isLoading.set(false);
+            });
+        } else {
+            this.isLoading.set(false);
+        }
+      });
+
       this.checkEventStatus();
       // Poll every minute to update status
       setInterval(() => this.checkEventStatus(), 60000);
