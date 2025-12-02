@@ -1,5 +1,7 @@
 import { Injectable, inject, signal, effect, computed } from '@angular/core';
-import { SupabaseService } from './supabase.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../environments/environment';
+import { firstValueFrom } from 'rxjs';
 import { EventService } from './event.service';
 
 export interface Page {
@@ -12,6 +14,7 @@ export interface BookElement {
   id: string;
   type: 'photo' | 'text' | 'sticker';
   content: string; // URL for photo/sticker, text content for text
+  note?: string; // Optional note from the guest
   x: number;
   y: number;
   width: number;
@@ -25,8 +28,8 @@ export interface BookElement {
   providedIn: 'root'
 })
 export class BookService {
-  private supabase = inject(SupabaseService).supabase;
   private eventService = inject(EventService);
+  private http = inject(HttpClient);
 
   private readonly _pages = signal<Page[]>([]);
   public readonly pages = this._pages.asReadonly();
@@ -57,23 +60,54 @@ export class BookService {
   }
 
   async loadBook(eventId: string) {
-    const { data, error } = await this.supabase
-      .from('books')
-      .select('*')
-      .eq('event_id', eventId)
-      .single();
+    try {
+      const response = await firstValueFrom(this.http.get<{ status: boolean, data: any }>(
+        `${environment.backendUrl}/books/get/${eventId}`
+      ));
 
-    if (error && error.code !== 'PGRST116') { // Ignore not found error
+      if (response.status && response.data) {
+        this._pages.set(response.data.pages || []);
+        this._elements.set(response.data.elements || []);
+      } else {
+        // Initialize with one empty page if no book exists
+        this.initializeNewBook();
+      }
+    } catch (error) {
       console.error("Error loading book:", error);
-      return;
+      // Initialize with one empty page on error (or not found)
+      this.initializeNewBook();
     }
+  }
 
-    if (data) {
-      this._pages.set(data.pages || []);
-      this._elements.set(data.elements || []);
+  private initializeNewBook() {
+    const event = this.eventService.event();
+    const coverUrl = event?.coverPhotoUrl;
+
+    const pageId = crypto.randomUUID();
+    const newPage: Page = {
+      id: pageId,
+      elements: []
+    };
+
+    this._pages.set([newPage]);
+
+    if (coverUrl) {
+      // Add cover photo as a full-page background element
+      const coverElement: BookElement = {
+        id: crypto.randomUUID(),
+        type: 'photo',
+        content: coverUrl,
+        x: 0,
+        y: 0,
+        width: 1122, // Approx A4 width in px at 96dpi
+        height: 793, // Approx A4 height
+        rotation: 0,
+        zIndex: 0,
+        pageId: pageId
+      };
+      this.addElement(coverElement);
     } else {
-      // Initialize with one empty page if no book exists
-      this.addPage();
+      this.saveState();
     }
   }
 
@@ -81,21 +115,22 @@ export class BookService {
     const eventId = this.eventService.event()?.id;
     if (!eventId) return;
 
-    const { error } = await this.supabase
-      .from('books')
-      .upsert({
-        event_id: eventId,
-        pages: this._pages(),
-        elements: this._elements()
-      });
+    const payload = {
+      event_id: eventId,
+      pages: this._pages(),
+      elements: this._elements()
+    };
 
-    if (error) {
+    try {
+      await firstValueFrom(this.http.post<{ status: boolean, message: string }>(
+        `${environment.backendUrl}/books/save`,
+        payload
+      ));
+    } catch (error) {
       console.error("Error saving book:", error);
     }
   }
 
-  // ... (Rest of the methods remain largely the same, just ensure they call saveState())
-  
   addPage() {
     const newPage: Page = {
       id: crypto.randomUUID(),
@@ -107,8 +142,8 @@ export class BookService {
 
   addElement(element: BookElement) {
     this._elements.update(elements => [...elements, element]);
-    this._pages.update(pages => pages.map(p => 
-      p.id === element.pageId 
+    this._pages.update(pages => pages.map(p =>
+      p.id === element.pageId
         ? { ...p, elements: [...p.elements, element.id] }
         : p
     ));
@@ -116,7 +151,7 @@ export class BookService {
   }
 
   updateElement(id: string, changes: Partial<BookElement>) {
-    this._elements.update(elements => elements.map(el => 
+    this._elements.update(elements => elements.map(el =>
       el.id === id ? { ...el, ...changes } : el
     ));
     this.saveState();
@@ -127,7 +162,7 @@ export class BookService {
     if (!element) return;
 
     this._elements.update(elements => elements.filter(e => e.id !== id));
-    this._pages.update(pages => pages.map(p => 
+    this._pages.update(pages => pages.map(p =>
       p.id === element.pageId
         ? { ...p, elements: p.elements.filter(eid => eid !== id) }
         : p

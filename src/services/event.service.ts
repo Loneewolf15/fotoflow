@@ -1,5 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { SupabaseService } from './supabase.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../environments/environment';
+import { firstValueFrom } from 'rxjs';
 import { WeddingEvent } from '../models/event.model';
 import { AuthService } from './auth.service';
 
@@ -7,8 +9,8 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class EventService {
-  private supabase = inject(SupabaseService).supabase;
   private authService = inject(AuthService);
+  private http = inject(HttpClient);
   private readonly _event = signal<WeddingEvent | null>(null);
   public readonly event = this._event.asReadonly();
 
@@ -19,161 +21,111 @@ export class EventService {
     }
   }
 
-  async createEvent(eventData: WeddingEvent): Promise<string> {
-    const currentUser = this.authService.currentUser();
-    
-    // Use upsert to handle both creation and updates based on the ID
-    const { data, error } = await this.supabase
-        .from('events')
-        .upsert({
-            id: eventData.id,
-            owner_id: currentUser?.uid,
-            couple_names: eventData.coupleNames,
-            event_date: eventData.eventDate,
-            start_time: eventData.startTime,
-            end_time: eventData.endTime,
-            theme: eventData.theme,
-            cover_photo_url: eventData.coverPhotoUrl,
-            strict_mode: eventData.strictMode,
-            qr_code_url: eventData.qrCodeUrl
-        })
-        .select()
-        .single();
-          
-    if (error) {
-      console.error("Error creating/updating event:", error);
+  async createEvent(eventData: WeddingEvent): Promise<void> {
+    try {
+      const hostId = this.authService.currentUser()?.user_id;
+      if (!hostId) throw new Error('User not authenticated');
+
+      const payload = {
+        id: eventData.id,
+        host_id: hostId,
+        couple_names: eventData.coupleNames,
+        event_date: eventData.eventDate,
+        start_time: eventData.startTime,
+        end_time: eventData.endTime,
+        theme: eventData.theme,
+        strict_mode: eventData.strictMode ? 1 : 0,
+        cover_photo_url: eventData.coverPhotoUrl?.replace(environment.backendUrl, ''),
+        qr_code_url: eventData.qrCodeUrl
+      };
+
+      const response = await firstValueFrom(this.http.post<{ status: boolean, message: string, data: any }>(
+        `${environment.backendUrl}/events/create`,
+        payload
+      ));
+
+      if (!response.status) {
+        throw new Error(response.message);
+      }
+
+      const createdEvent = { ...eventData, id: response.data.id };
+      this._event.set(createdEvent);
+      localStorage.setItem('currentEventId', createdEvent.id);
+
+    } catch (error: any) {
+      console.error('Error creating event:', error);
       throw error;
     }
-
-    const newEvent = this.mapSupabaseEvent(data);
-    this._event.set(newEvent);
-    localStorage.setItem('currentEventId', newEvent.id!);
-    return newEvent.id!;
   }
 
   async loadEvent(eventId: string): Promise<void> {
-    const { data, error } = await this.supabase
-      .from('events')
-      .select('*')
-      .eq('id', eventId)
-      .single();
+    try {
+      const response = await firstValueFrom(this.http.get<{ status: boolean, data: any }>(
+        `${environment.backendUrl}/events/get/${eventId}`
+      ));
 
-    if (error) {
-      console.error("Error loading event:", error);
-      return;
+      if (response.status && response.data) {
+        const event = this.mapBackendEvent(response.data);
+        this._event.set(event);
+        localStorage.setItem('currentEventId', eventId);
+      }
+    } catch (error) {
+      console.error('Error loading event:', error);
     }
-
-    if (data) {
-      this._event.set(this.mapSupabaseEvent(data));
-      localStorage.setItem('currentEventId', eventId);
-    }
-  }
-
-  async getEvents(): Promise<WeddingEvent[]> {
-    const currentUser = this.authService.currentUser();
-    if (!currentUser) return [];
-
-    const { data, error } = await this.supabase
-      .from('events')
-      .select('*')
-      .eq('owner_id', currentUser.uid)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error("Error loading events:", error);
-      return [];
-    }
-
-    return (data || []).map(this.mapSupabaseEvent);
-  }
-
-  async updateCoverPhoto(eventId: string, url: string): Promise<void> {
-    console.log(`Updating cover photo URL for event ${eventId} to ${url}`);
-    const { error } = await this.supabase
-      .from('events')
-      .update({ cover_photo_url: url })
-      .eq('id', eventId);
-
-    if (error) {
-      console.error('Error updating cover photo URL in DB:', error);
-      throw error;
-    }
-    
-    this._event.update(e => e ? { ...e, coverPhotoUrl: url } : null);
-  }
-
-  async updateQrCodeUrl(eventId: string, url: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('events')
-      .update({ qr_code_url: url })
-      .eq('id', eventId);
-
-    if (error) throw error;
-    
-    this._event.update(e => e ? { ...e, qrCodeUrl: url } : null);
   }
 
   async uploadCoverPhoto(file: File, targetEventId?: string): Promise<string> {
-    const eventId = targetEventId || this._event()?.id;
-    if (!eventId) throw new Error('No active event');
+    console.log(`Uploading cover photo to library...`);
 
-    console.log(`Uploading cover photo for event ${eventId}...`);
-    const filePath = `covers/${eventId}/${Date.now()}_${file.name}`;
+    const formData = new FormData();
+    formData.append('cover_photo', file);
 
-    // 1. Upload to Storage
-    const { error: uploadError } = await this.supabase.storage
-      .from('photos')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error('Supabase Storage Upload Error:', uploadError);
-      throw uploadError;
+    const hostId = this.authService.currentUser()?.user_id;
+    if (hostId) {
+      formData.append('host_id', hostId);
     }
 
-    // 2. Get Public URL
-    const { data: { publicUrl } } = this.supabase.storage
-      .from('photos')
-      .getPublicUrl(filePath);
+    // NOTE: We intentionally do NOT set event_id here
+    // This uploads to the library only, without updating any event
+    // To update an event, use updateEventCover() separately
 
-    console.log('Cover photo uploaded, public URL:', publicUrl);
+    try {
+      const uploadResponse = await firstValueFrom(this.http.post<{ status: boolean, message: string, data: { url: string } }>(`${environment.backendUrl}/events/upload_cover`,
+        formData
+      ));
 
-    // 3. Update Event Record (ONLY if event exists in DB)
-    // If we are in the creation flow (targetEventId provided), the event might not exist yet.
-    // In that case, we just return the URL and let the createEvent call handle the INSERT.
-    // However, uploadCoverPhoto is also used from the dashboard where the event DOES exist.
-    // We can check if the event exists, or just try the update and ignore "row not found" error?
-    // Better: If targetEventId is provided, we assume the caller handles the DB update (or insert).
-    // If targetEventId is NOT provided (using this._event().id), we assume it's an update to an existing event.
-    
-    if (!targetEventId) {
-        await this.updateCoverPhoto(eventId, publicUrl);
-    } else {
-        console.log('Skipping DB update for cover photo (assumed creation flow).');
+      if (!uploadResponse.status) {
+        throw new Error(uploadResponse.message || 'Upload failed');
+      }
+
+      const publicUrl = uploadResponse.data.url;
+      console.log('Cover photo uploaded to library, public URL:', publicUrl);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload Error:', error);
+      throw error;
     }
+  }
 
-    console.log('uploadCoverPhoto returning publicUrl:', publicUrl);
-    return publicUrl;
+  async updateEventCover(eventId: string, coverPhotoUrl: string): Promise<void> {
+    const response = await firstValueFrom(
+      this.http.post<{ status: boolean, message: string }>(
+        `${environment.backendUrl}/events/update_event_cover`,
+        { event_id: eventId, cover_photo_url: coverPhotoUrl }
+      )
+    );
+
+    if (!response.status) {
+      throw new Error(response.message || 'Failed to update event cover');
+    }
   }
 
   setEvent(event: WeddingEvent): void {
     this._event.set(event);
     if (event.id) {
-        this.loadEvent(event.id);
+      this.loadEvent(event.id);
     }
-  }
-  private mapSupabaseEvent(data: any): WeddingEvent {
-    return {
-      id: data.id,
-      ownerId: data.owner_id,
-      coupleNames: data.couple_names,
-      eventDate: data.event_date,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      theme: data.theme,
-      coverPhotoUrl: data.cover_photo_url,
-      strictMode: data.strict_mode,
-      qrCodeUrl: data.qr_code_url
-    };
   }
 
   clearEvent(): void {
@@ -181,29 +133,97 @@ export class EventService {
     localStorage.removeItem('currentEventId');
   }
 
+  async getEvents(): Promise<WeddingEvent[]> {
+    try {
+      const hostId = this.authService.currentUser()?.user_id;
+      if (!hostId) return [];
+
+      const response = await firstValueFrom(this.http.get<{ status: boolean, message: string, data: any[] }>(
+        `${environment.backendUrl}/events/get_host_events/${hostId}`
+      ));
+
+      if (response.status && response.data) {
+        return response.data.map(this.mapBackendEvent);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      return [];
+    }
+  }
+
+  async getCoverPhotoHistory(hostId: string): Promise<any[]> {
+    try {
+      const response = await firstValueFrom(this.http.get<{ status: boolean, message: string, data: any[] }>(
+        `${environment.backendUrl}/events/get_cover_history/${hostId}`
+      ));
+
+      if (response.status && response.data) {
+        return response.data.map(item => ({
+          ...item,
+          image_url: item.image_url && !item.image_url.startsWith('http')
+            ? `${environment.backendUrl}${item.image_url}`
+            : item.image_url
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching cover photo history:', error);
+      return [];
+    }
+  }
+
   getEventStatus(): 'upcoming' | 'active' | 'ended' {
-    const currentEvent = this.event();
-    if (!currentEvent) return 'ended'; // Or handle as no event
+    const event = this._event();
+    if (!event) return 'ended';
 
     const now = new Date();
-    
-    // If no start time is set, assume active on the event date (or just active)
-    if (!currentEvent.startTime) {
-        // Fallback logic: if eventDate is today, it's active. If past, ended. If future, upcoming.
-        // For simplicity in this MVP, without specific times, we might just say 'active' 
-        // if it matches the date, but let's rely on the new fields for the "Professional" feature.
-        return 'active'; 
-    }
 
-    const start = new Date(currentEvent.startTime);
-    const end = currentEvent.endTime ? new Date(currentEvent.endTime) : new Date(start.getTime() + 24 * 60 * 60 * 1000); // Default 24h duration
-
-    if (now < start) {
-      return 'upcoming';
-    } else if (now > end) {
-      return 'ended';
+    // Parse start time
+    let start: Date;
+    if (event.startTime) {
+      start = new Date(event.startTime);
+    } else if (event.eventDate) {
+      start = new Date(event.eventDate);
+      start.setHours(0, 0, 0, 0);
     } else {
-      return 'active';
+      return 'active'; // Fallback
     }
+
+    // Parse end time
+    let end: Date;
+    if (event.endTime) {
+      end = new Date(event.endTime);
+    } else if (event.eventDate) {
+      end = new Date(event.eventDate);
+      end.setHours(23, 59, 59, 999);
+    } else {
+      // Default to 24 hours after start if no end time
+      end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    }
+
+    if (now < start) return 'upcoming';
+    if (now > end) return 'ended';
+    return 'active';
+  }
+
+  private mapBackendEvent(data: any): WeddingEvent {
+    let coverUrl = data.cover_photo_url;
+    if (coverUrl && !coverUrl.startsWith('http')) {
+      coverUrl = `${environment.backendUrl}${coverUrl}`;
+    }
+
+    return {
+      id: data.id,
+      coupleNames: data.couple_names,
+      eventDate: data.event_date,
+      startTime: data.start_time,
+      endTime: data.end_time,
+      strictMode: !!data.strict_mode,
+      theme: data.theme,
+      coverPhotoUrl: coverUrl,
+      qrCodeUrl: data.qr_code_url,
+      ownerId: data.host_id
+    };
   }
 }

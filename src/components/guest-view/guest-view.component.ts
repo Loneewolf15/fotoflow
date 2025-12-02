@@ -22,9 +22,9 @@ type UploadState = 'idle' | 'capturing' | 'preview' | 'checking' | 'captioning' 
 })
 export class GuestViewComponent implements OnInit {
   // event = input.required<WeddingEvent>(); // Removed input, now fetching from service/route
-  
+
   @ViewChild('videoElement') videoElement?: ElementRef<HTMLVideoElement>;
-  
+
   private sharpnessService = inject(ImageSharpnessService);
   private geminiService = inject(GeminiService);
   private photoService = inject(PhotoService);
@@ -45,13 +45,13 @@ export class GuestViewComponent implements OnInit {
   isGeneratingCaption = signal(false);
   cameraError = signal<string | null>(null);
   cameraFacingMode = signal<'user' | 'environment'>('environment');
-  
+
   eventStatus = signal<'upcoming' | 'active' | 'ended'>('active');
   validationError = signal<string | null>(null);
   isLoading = signal(true);
-  
+
   private sanitizer = inject(DomSanitizer);
-  
+
   coverPhotoStyle = computed(() => {
     const url = this.event()?.coverPhotoUrl;
     if (url) {
@@ -65,44 +65,44 @@ export class GuestViewComponent implements OnInit {
 
   constructor() {
     effect(() => {
-        // Re-check status if event changes
-        this.checkEventStatus();
+      // Re-check status if event changes
+      this.checkEventStatus();
     });
   }
 
   ngOnInit(): void {
-      console.log('GuestView: Initializing...');
-      
-      this.route.paramMap.subscribe(params => {
-        const id = params.get('id');
-        console.log('GuestView: Route ID:', id);
-        if (id) {
-            this.isLoading.set(true);
-            this.eventService.loadEvent(id).then(() => {
-                console.log('GuestView: Event loaded:', this.event());
-                this.checkEventStatus();
-                this.isLoading.set(false);
-            }).catch(err => {
-                console.error('GuestView: Error loading event', err);
-                this.isLoading.set(false);
-            });
-        } else {
-            this.isLoading.set(false);
-        }
-      });
+    console.log('GuestView: Initializing...');
 
-      this.checkEventStatus();
-      // Poll every minute to update status
-      setInterval(() => this.checkEventStatus(), 60000);
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      console.log('GuestView: Route ID:', id);
+      if (id) {
+        this.isLoading.set(true);
+        this.eventService.loadEvent(id).then(() => {
+          console.log('GuestView: Event loaded:', this.event());
+          this.checkEventStatus();
+          this.isLoading.set(false);
+        }).catch(err => {
+          console.error('GuestView: Error loading event', err);
+          this.isLoading.set(false);
+        });
+      } else {
+        this.isLoading.set(false);
+      }
+    });
+
+    this.checkEventStatus();
+    // Poll every minute to update status
+    setInterval(() => this.checkEventStatus(), 60000);
   }
 
   private checkEventStatus(): void {
-      // Admin Override: If currentUser is logged in (Host), always active
-      if (this.authService.currentUser()) {
-          this.eventStatus.set('active');
-          return;
-      }
-      this.eventStatus.set(this.eventService.getEventStatus());
+    // Admin Override: If currentUser is logged in (Host), always active
+    if (this.authService.currentUser()) {
+      this.eventStatus.set('active');
+      return;
+    }
+    this.eventStatus.set(this.eventService.getEventStatus());
   }
 
   onEventStarted(): void {
@@ -114,7 +114,7 @@ export class GuestViewComponent implements OnInit {
   }
 
   get isHost(): boolean {
-      return !!this.authService.currentUser();
+    return !!this.authService.currentUser();
   }
 
   onFileSelected(event: Event): void {
@@ -130,7 +130,7 @@ export class GuestViewComponent implements OnInit {
     this.previewUrl.set(URL.createObjectURL(file));
     this.uploadState.set('checking');
     this.validationError.set(null);
-    
+
     try {
       // 1. Sharpness Check
       const sharpness = await this.sharpnessService.checkSharpness(file);
@@ -143,27 +143,27 @@ export class GuestViewComponent implements OnInit {
         this.uploadState.set('validating');
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        
+
         await new Promise<void>((resolve, reject) => {
-            reader.onload = async () => {
-                try {
-                    const base64String = (reader.result as string).split(',')[1];
-                    const validation = await this.geminiService.validateImageContext(base64String);
-                    
-                    if (!validation.isWeddingRelated) {
-                        this.validationError.set(`Photo hidden: Off-topic (${validation.reason})`);
-                        // Don't proceed to preview
-                        reject('Validation failed'); 
-                    } else {
-                        resolve();
-                    }
-                } catch (e) {
-                    console.error("Validation error", e);
-                    // Fail open if error, or reject? Let's allow for now to avoid blocking on API errors
-                    resolve(); 
-                }
-            };
-            reader.onerror = reject;
+          reader.onload = async () => {
+            try {
+              const base64String = (reader.result as string).split(',')[1];
+              const validation = await this.geminiService.validateImageContext(base64String);
+
+              if (!validation.isWeddingRelated) {
+                this.validationError.set(`Photo hidden: Off-topic (${validation.reason})`);
+                // Don't proceed to preview
+                reject('Validation failed');
+              } else {
+                resolve();
+              }
+            } catch (e) {
+              console.error("Validation error", e);
+              // Fail open if error, or reject? Let's allow for now to avoid blocking on API errors
+              resolve();
+            }
+          };
+          reader.onerror = reject;
         });
       }
 
@@ -171,40 +171,40 @@ export class GuestViewComponent implements OnInit {
 
     } catch (error) {
       if (error === 'Validation failed') {
-          // Stay in checking/validating state or go back to idle?
-          // Let's go to a specific error state or just show the error in the UI
-          // For now, we'll reset to idle but keep the error visible if we add a UI element for it.
-          // Actually, let's keep it in 'idle' but with the error message shown.
-          this.uploadState.set('idle');
-          // We need to clear the preview url if validation failed
-          URL.revokeObjectURL(this.previewUrl()!);
-          this.previewUrl.set(null);
-          this.selectedFile.set(null);
+        // Stay in checking/validating state or go back to idle?
+        // Let's go to a specific error state or just show the error in the UI
+        // For now, we'll reset to idle but keep the error visible if we add a UI element for it.
+        // Actually, let's keep it in 'idle' but with the error message shown.
+        this.uploadState.set('idle');
+        // We need to clear the preview url if validation failed
+        URL.revokeObjectURL(this.previewUrl()!);
+        this.previewUrl.set(null);
+        this.selectedFile.set(null);
       } else {
-          console.error("Check failed:", error);
-          this.uploadState.set('preview'); // Fallback
+        console.error("Check failed:", error);
+        this.uploadState.set('preview'); // Fallback
       }
     }
   }
-  
+
   async startCamera(): Promise<void> {
     this.uploadState.set('capturing');
     this.cameraError.set(null);
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.cameraFacingMode() } });
-        if (this.videoElement) {
-            this.videoElement.nativeElement.srcObject = stream;
-        }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.cameraFacingMode() } });
+      if (this.videoElement) {
+        this.videoElement.nativeElement.srcObject = stream;
+      }
     } catch (err: any) {
-        console.error("Error accessing camera: ", err);
-        if (err.name === 'NotAllowedError') {
-          this.cameraError.set('Camera access was denied. Please enable camera permissions in your browser settings and try again.');
-        } else if (err.name === 'NotFoundError') {
-           this.cameraError.set('No camera was found on your device. You can still upload a photo from your library.');
-        } else {
-          this.cameraError.set('Could not access the camera. Please check your device settings.');
-        }
-        this.uploadState.set('idle');
+      console.error("Error accessing camera: ", err);
+      if (err.name === 'NotAllowedError') {
+        this.cameraError.set('Camera access was denied. Please enable camera permissions in your browser settings and try again.');
+      } else if (err.name === 'NotFoundError') {
+        this.cameraError.set('No camera was found on your device. You can still upload a photo from your library.');
+      } else {
+        this.cameraError.set('Could not access the camera. Please check your device settings.');
+      }
+      this.uploadState.set('idle');
     }
   }
 
@@ -232,7 +232,7 @@ export class GuestViewComponent implements OnInit {
       this.videoElement.nativeElement.srcObject = null;
     }
   }
-  
+
   switchCamera(): void {
     this.stopStream();
     this.cameraFacingMode.update(mode => mode === 'environment' ? 'user' : 'environment');
@@ -247,22 +247,22 @@ export class GuestViewComponent implements OnInit {
   async uploadPhoto(): Promise<void> {
     this.uploadState.set('uploading');
     this.isUploading.set(true);
-    
+
     try {
-        const file = this.selectedFile();
-        if (file) {
-            await this.photoService.addPhoto(
-                file,
-                this.guestNote() || this.geminiCaption() || 'No note left.'
-            );
-            this.uploadState.set('success');
-        }
+      const file = this.selectedFile();
+      if (file) {
+        await this.photoService.addPhoto(
+          file,
+          this.guestNote() || this.geminiCaption() || 'No note left.'
+        );
+        this.uploadState.set('success');
+      }
     } catch (error) {
-        console.error("Upload failed", error);
-        alert("Failed to upload photo. Please try again.");
-        this.uploadState.set('preview'); // Go back to preview on error
+      console.error("Upload failed", error);
+      alert("Failed to upload photo. Please try again.");
+      this.uploadState.set('preview'); // Go back to preview on error
     } finally {
-        this.isUploading.set(false);
+      this.isUploading.set(false);
     }
   }
 
@@ -282,9 +282,9 @@ export class GuestViewComponent implements OnInit {
       this.uploadState.set('preview');
     };
     reader.onerror = (error) => {
-        console.error("Error reading file for caption generation:", error);
-        this.isGeneratingCaption.set(false);
-        this.uploadState.set('preview');
+      console.error("Error reading file for caption generation:", error);
+      this.isGeneratingCaption.set(false);
+      this.uploadState.set('preview');
     };
   }
 
@@ -304,7 +304,7 @@ export class GuestViewComponent implements OnInit {
   uploadAnother(): void {
     this.resetPreview();
   }
-  
+
   async shareToSocials(): Promise<void> {
     if (!this.isShareApiAvailable) {
       alert('Sharing is not supported on this browser.');
@@ -323,6 +323,12 @@ export class GuestViewComponent implements OnInit {
   }
 
   resetApp(): void {
-    this.router.navigate(['/']);
+    // If user is a host (logged in), navigate to dashboard
+    // Otherwise, navigate to landing page
+    if (this.isHost) {
+      this.router.navigate(['/dashboard']);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 }

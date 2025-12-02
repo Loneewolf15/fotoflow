@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-signup',
@@ -14,6 +15,7 @@ import { AuthService } from '../../services/auth.service';
 export class SignupComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private toastService = inject(ToastService);
 
   name = signal('');
   email = signal('');
@@ -43,7 +45,8 @@ export class SignupComponent {
 
     try {
       await this.authService.signupWithEmail(this.email(), this.password(), this.name());
-      this.router.navigate(['/dashboard']);
+      this.toastService.success('Registration successful! Please activate your account via the email sent to you and proceed to login.', 5000);
+      this.router.navigate(['/login']);
     } catch (err: any) {
       console.error('Signup failed', err);
       if (err.code === 'auth/email-already-in-use') {

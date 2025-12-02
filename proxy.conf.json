@@ -1,0 +1,8 @@
+{
+    "/Precioux/backend": {
+        "target": "http://192.168.0.131",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    }
+}

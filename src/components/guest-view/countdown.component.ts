@@ -1,74 +1,110 @@
-import { Component, Input, signal, OnInit, OnDestroy, inject, output } from '@angular/core';
+import { Component, Input, signal, OnInit, OnDestroy, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
-import { WeddingEvent } from '../../models/event.model';
+
+// --- Local Interface Definition to fix missing import error ---
+export interface WeddingEvent {
+  id?: string;
+  coupleNames?: string;
+  eventDate?: string | Date; // Display date
+  startTime?: string; // ISO string for countdown target
+  coverPhotoUrl?: string;
+  // Add other fields if necessary
+}
 
 @Component({
   selector: 'app-countdown',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="fixed inset-0 w-full h-full overflow-hidden z-50">
-      <!-- Layer 1: Background Image -->
-      <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
-           [style.background-image]="'url(' + (event.coverPhotoUrl || '/assets/default-wedding-bg.jpg') + ')'">
-      </div>
-
-      <!-- Layer 2: Overlay -->
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-
-      <!-- Layer 3: Content -->
-      <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-4 animate-fade-in">
+    <!-- Timer Card Only - Header is rendered by parent GuestViewComponent -->
+    <div class="w-full max-w-md mx-auto bg-organic-mist/30 backdrop-blur-md rounded-2xl p-6 border border-organic-mist-light shadow-xl animate-fade-in">
         
-        <!-- Header -->
-        <p class="text-sm sm:text-base uppercase tracking-[0.2em] mb-4 opacity-90 font-light">
-          Welcome to the wedding of
-        </p>
+        <div class="text-center mb-6">
+            <h2 class="text-2xl sm:text-3xl font-semibold text-organic-text mb-2">Counting Down</h2>
+            <p class="text-organic-stone">Until we celebrate together</p>
+        </div>
 
-        <!-- Names -->
-        <h1 class="text-5xl sm:text-7xl md:text-8xl font-serif text-center mb-12 leading-tight drop-shadow-lg">
-          {{ event.coupleNames }}
-        </h1>
-
-        <!-- Timer -->
-        <div class="grid grid-cols-4 gap-3 sm:gap-6 mb-16">
-          @for (unit of timeUnits; track unit.label) {
-            <div class="flex flex-col items-center p-3 sm:p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl min-w-[70px] sm:min-w-[100px]">
-              <span class="text-3xl sm:text-5xl font-bold font-mono mb-1 sm:mb-2 drop-shadow-md">
-                {{ unit.value | number:'2.0-0' }}
-              </span>
-              <span class="text-[10px] sm:text-xs uppercase tracking-wider opacity-80">{{ unit.label }}</span>
+        <!-- Timer Section -->
+        <div class="w-full animate-scale-in">
+            <div class="grid grid-cols-4 gap-3 sm:gap-4">
+              @for (unit of timeUnits; track unit.label) {
+                <div class="flex flex-col items-center justify-center p-3 rounded-xl border border-organic-mist-light bg-organic-mist/50 min-h-[80px] sm:min-h-[100px]">
+                  <span class="text-2xl sm:text-4xl font-bold font-mono text-organic-text mb-1 drop-shadow-lg tabular-nums leading-none">
+                    {{ unit.value | number:'2.0-0' }}
+                  </span>
+                  <span class="text-[10px] sm:text-xs uppercase tracking-wider text-organic-stone font-medium">{{ unit.label }}</span>
+                </div>
+              }
             </div>
-          }
         </div>
 
         <!-- Admin Bypass -->
         @if (isAdmin()) {
-          <button (click)="bypassCountdown()" 
-                  class="mt-8 px-6 py-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-sm font-medium transition-all hover:scale-105">
-            Test Camera (Admin Only)
-          </button>
+          <div class="mt-6 opacity-0 hover:opacity-100 transition-opacity duration-300">
+              <button (click)="bypassCountdown()" 
+                      class="px-6 py-2 rounded-full bg-organic-mist/30 hover:bg-organic-mist-light border border-organic-mist-light text-xs font-medium transition-all text-organic-text">
+                Test Camera (Admin)
+              </button>
+          </div>
         }
-      </div>
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
+    :host { display: block; }
+    
+    .animate-ken-burns {
+      animation: kenBurns 20s infinite alternate ease-in-out;
     }
+    @keyframes kenBurns {
+      0% { transform: scale(1) translate(0, 0); }
+      100% { transform: scale(1.15) translate(-2%, -2%); }
+    }
+
+    .animate-fade-in { animation: fade-in 1.2s ease-out forwards; }
+    .animate-fade-in-delayed { animation: fade-in 1.2s ease-out 1.5s forwards; opacity: 0; }
+    
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slide-down {
+        from { opacity: 0; transform: translateY(-40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-down { animation: slide-down 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    
+    @keyframes scale-in {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .animate-scale-in { animation: scale-in 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards; opacity: 0; }
   `]
 })
 export class CountdownComponent implements OnInit, OnDestroy {
   @Input({ required: true }) event!: WeddingEvent;
-  // @Input({ required: true }) targetDate!: string; // Replaced by event object
-  
+  @Input() extraImages: string[] = [];
+  @Input() isUserAdmin: boolean = false;
+
   timeLeft = signal({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   isAdmin = signal(false);
-  
-  private authService = inject(AuthService);
-  private intervalId: any;
+  currentImageIndex = signal(0);
 
-  // Helper for template loop
+  images = computed(() => {
+    const defaultBg = '/assets/default-wedding-bg.jpg';
+    const cover = this.event?.coverPhotoUrl || defaultBg;
+
+    const list = [cover];
+    if (this.extraImages && this.extraImages.length > 0) {
+      return [...list, ...this.extraImages];
+    }
+    return list;
+  });
+
+  private timerInterval: any;
+  private slideInterval: any;
+
+  eventStarted = output<void>();
+
   get timeUnits() {
     const t = this.timeLeft();
     return [
@@ -80,33 +116,32 @@ export class CountdownComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.isAdmin.set(!!this.authService.currentUser());
+    this.isAdmin.set(this.isUserAdmin);
     this.updateTime();
-    this.intervalId = setInterval(() => this.updateTime(), 1000);
+
+    this.timerInterval = setInterval(() => this.updateTime(), 1000);
+
+    if (this.images().length > 1) {
+      this.slideInterval = setInterval(() => {
+        this.currentImageIndex.update(i => (i + 1) % this.images().length);
+      }, 6000);
+    }
   }
 
   ngOnDestroy() {
-    if (this.intervalId) clearInterval(this.intervalId);
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.slideInterval) clearInterval(this.slideInterval);
   }
 
   bypassCountdown() {
-    // Force expire the countdown locally to trigger view change
-    // Since the parent controls the view based on 'eventStatus', we might need to 
-    // communicate this bypass differently. 
-    // However, the prompt says "trigger a callback onEventStart()".
-    // But in our architecture, GuestView checks status via EventService.
-    // For now, let's just emit an event or hack the local state if possible.
-    // Actually, looking at GuestView, it renders <app-countdown> if status is 'upcoming'.
-    // We need to tell GuestView to switch to 'active'.
-    // Since we don't have an output for that yet, let's add one.
     this.eventStarted.emit();
   }
 
-  eventStarted = output<void>();
-
   private updateTime() {
+    if (!this.event?.startTime) return;
+
     const now = new Date().getTime();
-    const target = new Date(this.event.startTime!).getTime();
+    const target = new Date(this.event.startTime).getTime();
     const distance = target - now;
 
     if (distance < 0) {

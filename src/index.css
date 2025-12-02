@@ -2,14 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-organic-dark text-organic-text;
+  }
+}
+
 /* Custom Animations */
 @keyframes float {
   0% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-20px);
   }
+
   100% {
     transform: translateY(0px);
   }

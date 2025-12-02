@@ -1,5 +1,7 @@
 import { Injectable, inject, signal, effect } from '@angular/core';
-import { SupabaseService } from './supabase.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../environments/environment';
+import { firstValueFrom } from 'rxjs';
 import { Photo } from '../models/photo.model';
 import { EventService } from './event.service';
 
@@ -7,8 +9,8 @@ import { EventService } from './event.service';
   providedIn: 'root'
 })
 export class PhotoService {
-  private supabase = inject(SupabaseService).supabase;
   private eventService = inject(EventService);
+  private http = inject(HttpClient);
 
   private readonly _photos = signal<Photo[]>([]);
   public readonly photos = this._photos.asReadonly();
@@ -18,7 +20,6 @@ export class PhotoService {
       const event = this.eventService.event();
       if (event && event.id) {
         this.loadPhotos(event.id);
-        this.subscribeToPhotos(event.id);
       } else {
         this._photos.set([]);
       }
@@ -26,70 +27,62 @@ export class PhotoService {
   }
 
   private async loadPhotos(eventId: string) {
-    const { data, error } = await this.supabase
-      .from('photos')
-      .select('*')
-      .eq('event_id', eventId)
-      .order('timestamp', { ascending: false });
-    
-    if (error) {
+    try {
+      const response = await firstValueFrom(this.http.get<{ status: boolean, data: any[] }>(
+        `${environment.backendUrl}/photos/get/${eventId}`
+      ));
+
+      if (response.status && response.data) {
+        this._photos.set(response.data.map(this.mapBackendPhoto));
+      }
+    } catch (error) {
       console.error("Error loading photos:", error);
-      return;
     }
-
-    if (data) {
-      this._photos.set(data.map(this.mapSupabasePhoto));
-    }
-  }
-
-  private subscribeToPhotos(eventId: string) {
-    this.supabase
-      .channel('public:photos')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'photos', filter: `event_id=eq.${eventId}` }, payload => {
-        const newPhoto = this.mapSupabasePhoto(payload.new);
-        this._photos.update(photos => [newPhoto, ...photos]);
-      })
-      .subscribe();
   }
 
   async addPhoto(file: File, note: string): Promise<void> {
     const eventId = this.eventService.event()?.id;
     if (!eventId) throw new Error('No active event');
 
-    const filePath = `events/${eventId}/${Date.now()}_${file.name}`;
-    
-    // 1. Upload to Storage
-    const { error: uploadError } = await this.supabase.storage
-      .from('photos')
-      .upload(filePath, file);
+    const formData = new FormData();
+    formData.append('event_id', eventId);
+    formData.append('note', note);
+    formData.append('photos', file);
 
-    if (uploadError) throw uploadError;
+    try {
+      const response = await firstValueFrom(this.http.post<{ status: boolean, message: string, data: any[] }>(
+        `${environment.backendUrl}/photos/add`,
+        formData
+      ));
 
-    // 2. Get Public URL
-    const { data: { publicUrl } } = this.supabase.storage
-      .from('photos')
-      .getPublicUrl(filePath);
+      if (!response.status) {
+        throw new Error(response.message || 'Failed to add photo');
+      }
 
-    // 3. Save Metadata to DB
-    const { error: dbError } = await this.supabase
-      .from('photos')
-      .insert({
-        event_id: eventId,
-        image_url: publicUrl,
-        note,
-        timestamp: new Date().toISOString()
-      });
+      // Optimistic update with returned data
+      if (response.data && response.data.length > 0) {
+        const newPhoto = this.mapBackendPhoto(response.data[0]);
+        this._photos.update(photos => [newPhoto, ...photos]);
+      }
 
-    if (dbError) throw dbError;
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      throw error;
+    }
   }
 
-  private mapSupabasePhoto(data: any): Photo {
+  private mapBackendPhoto(data: any): Photo {
+    let imageUrl = data.image_url;
+    if (imageUrl && !imageUrl.startsWith('http')) {
+      imageUrl = `${environment.backendUrl}${imageUrl}`;
+    }
+
     return {
       id: data.id,
       eventId: data.event_id,
-      imageUrl: data.image_url,
+      imageUrl: imageUrl,
       note: data.note,
-      timestamp: data.timestamp
+      timestamp: data.timestamp || data.created_at
     };
   }
 }

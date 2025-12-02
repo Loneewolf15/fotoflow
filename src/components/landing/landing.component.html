@@ -1,16 +1,22 @@
-<div class="min-h-screen text-slate-50 font-sans selection:bg-indigo-500 selection:text-white">
+<div class="min-h-screen text-organic-text font-sans selection:bg-organic-green selection:text-organic-dark">
   <header class="absolute inset-x-0 top-0 z-50">
     <nav class="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
       <div class="flex lg:flex-1">
         <a href="#" class="-m-1.5 p-1.5 flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          <div
+            class="w-8 h-8 rounded-lg bg-gradient-to-br from-organic-green to-teal-700 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+              <circle cx="12" cy="13" r="3" />
+            </svg>
           </div>
-          <span class="text-2xl font-bold tracking-tight text-white">fotoFlow</span>
+          <span class="text-2xl font-bold tracking-tight text-organic-text">fotoFlow</span>
         </a>
       </div>
       <div class="flex lg:flex-1 lg:justify-end">
-        <button (click)="navigateToLogin()" class="glass-button px-6 py-2 rounded-full text-sm font-semibold text-white hover:bg-white/10 transition-all">
+        <button (click)="navigateToLogin()"
+          class="glass-button px-6 py-2 rounded-full text-sm font-semibold text-organic-text hover:bg-organic-mist/50 transition-all border border-organic-mist-light">
           Login <span aria-hidden="true">&rarr;</span>
         </button>
       </div>
@@ -19,38 +25,51 @@
 
   <main>
     <!-- Hero Section -->
-    <div class="relative isolate pt-32 pb-24 sm:pt-48 sm:pb-32 overflow-hidden">
-       <!-- Background Effects -->
-       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
-          <div class="absolute top-20 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-float" style="animation-delay: 0s;"></div>
-          <div class="absolute top-40 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-float" style="animation-delay: -2s;"></div>
-       </div>
+    <div class="relative isolate pt-32 pb-24 sm:pt-48 sm:pb-32 overflow-hidden bg-organic-dark">
+      <!-- Background Effects -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+        <div class="absolute top-20 left-1/4 w-96 h-96 bg-organic-green/10 rounded-full blur-3xl animate-float"
+          style="animation-delay: 0s;"></div>
+        <div class="absolute top-40 right-1/4 w-96 h-96 bg-organic-stone/10 rounded-full blur-3xl animate-float"
+          style="animation-delay: -2s;"></div>
+      </div>
 
       <div class="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
         <div class="mx-auto max-w-3xl text-center animate-fade-in-up">
-          <h1 class="text-5xl font-bold tracking-tight text-white sm:text-7xl mb-6">
-            Capture the <span class="text-gradient">Magic</span> of Your Moment
+          <h1 class="text-5xl font-bold tracking-tight text-organic-text sm:text-7xl mb-6">
+            Capture the <span class="text-organic-green">Magic</span> of Your Moment
           </h1>
-          <p class="mt-6 text-lg leading-8 text-slate-300 max-w-2xl mx-auto">
-            The candid moments your photographer misses. Turn your guests into photographers with a simple QR code. Instant shared album. Beautiful photo book.
+          <p class="mt-6 text-lg leading-8 text-organic-stone max-w-2xl mx-auto">
+            The candid moments your photographer misses. Turn your guests into photographers with a simple QR code.
+            Instant shared album. Beautiful photo book.
           </p>
           <div class="mt-10 flex items-center justify-center gap-x-6">
-            <button (click)="navigateToLogin()" class="rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 px-8 py-4 text-sm font-bold text-white shadow-lg hover:shadow-indigo-500/25 hover:scale-105 transition-all duration-300">
+            <button (click)="navigateToLogin()"
+              class="rounded-full bg-gradient-to-r from-organic-green to-teal-700 px-8 py-4 text-sm font-bold text-organic-dark shadow-lg hover:shadow-organic-green/25 hover:scale-105 transition-all duration-300">
               Create Your Event
             </button>
-            <button class="text-sm font-semibold leading-6 text-white hover:text-indigo-300 transition-colors">
+            <button
+              class="text-sm font-semibold leading-6 text-organic-text hover:text-organic-green transition-colors">
               View Demo <span aria-hidden="true">→</span>
             </button>
           </div>
-          
+
           <div class="mt-12 flex items-center justify-center gap-x-8 opacity-70">
             <div class="flex items-center gap-2">
-              <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-              <span class="text-sm">Private & Secure</span>
+              <svg class="w-5 h-5 text-organic-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                </path>
+              </svg>
+              <span class="text-sm text-organic-stone">Private & Secure</span>
             </div>
             <div class="flex items-center gap-2">
-              <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-              <span class="text-sm">Full Resolution</span>
+              <svg class="w-5 h-5 text-organic-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                </path>
+              </svg>
+              <span class="text-sm text-organic-stone">Full Resolution</span>
             </div>
           </div>
         </div>
@@ -58,93 +77,114 @@
     </div>
 
     <!-- Features Grid -->
-    <div class="py-24 sm:py-32 relative">
+    <div class="py-24 sm:py-32 relative bg-organic-dark">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto grid max-w-2xl grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-            <!-- Feature 1 -->
-            <div class="glass-panel rounded-2xl p-8 hover:bg-slate-800/50 transition-colors">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 mb-6">
-                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-              </div>
-              <h3 class="text-xl font-bold text-white mb-3">No App Required</h3>
-              <p class="text-slate-400 leading-relaxed">Guests just scan the QR code and snap photos. No logins, no downloads, zero friction. It just works.</p>
+          <!-- Feature 1 -->
+          <div
+            class="glass-panel rounded-2xl p-8 hover:bg-organic-mist/50 transition-colors border border-organic-mist-light bg-organic-mist/30">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-organic-green/10 mb-6">
+              <svg class="w-6 h-6 text-organic-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z">
+                </path>
+              </svg>
             </div>
+            <h3 class="text-xl font-bold text-organic-text mb-3">No App Required</h3>
+            <p class="text-organic-stone leading-relaxed">Guests just scan the QR code and snap photos. No logins, no
+              downloads, zero friction. It just works.</p>
+          </div>
 
-            <!-- Feature 2 -->
-            <div class="glass-panel rounded-2xl p-8 hover:bg-slate-800/50 transition-colors">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/10 mb-6">
-                <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-              </div>
-              <h3 class="text-xl font-bold text-white mb-3">AI Magic</h3>
-              <p class="text-slate-400 leading-relaxed">Our smart AI filters out blurry shots and duplicates, ensuring your final album is pristine and print-ready.</p>
+          <!-- Feature 2 -->
+          <div
+            class="glass-panel rounded-2xl p-8 hover:bg-organic-mist/50 transition-colors border border-organic-mist-light bg-organic-mist/30">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-organic-stone/10 mb-6">
+              <svg class="w-6 h-6 text-organic-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                </path>
+              </svg>
             </div>
+            <h3 class="text-xl font-bold text-organic-text mb-3">AI Magic</h3>
+            <p class="text-organic-stone leading-relaxed">Our smart AI filters out blurry shots and duplicates, ensuring
+              your final album is pristine and print-ready.</p>
+          </div>
 
-            <!-- Feature 3 -->
-            <div class="glass-panel rounded-2xl p-8 hover:bg-slate-800/50 transition-colors">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/10 mb-6">
-                <svg class="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-              </div>
-              <h3 class="text-xl font-bold text-white mb-3">Live Slideshow</h3>
-              <p class="text-slate-400 leading-relaxed">Display photos in real-time on big screens. Watch as your event comes to life from every angle.</p>
+          <!-- Feature 3 -->
+          <div
+            class="glass-panel rounded-2xl p-8 hover:bg-organic-mist/50 transition-colors border border-organic-mist-light bg-organic-mist/30">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/10 mb-6">
+              <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                </path>
+              </svg>
             </div>
+            <h3 class="text-xl font-bold text-organic-text mb-3">Live Slideshow</h3>
+            <p class="text-organic-stone leading-relaxed">Display photos in real-time on big screens. Watch as your
+              event comes to life from every angle.</p>
+          </div>
         </div>
       </div>
     </div>
-    
+
     <!-- Comparison Section -->
-    <div class="py-24 sm:py-32">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <div class="mx-auto max-w-2xl text-center mb-16">
-                <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">Why <span class="text-gradient">fotoFlow</span>?</h2>
-                <p class="mt-6 text-lg leading-8 text-slate-400">Don't wait weeks for photos. Don't settle for grainy disposable cameras.</p>
-            </div>
-            
-            <div class="glass-panel rounded-3xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-700/50">
-                                <th class="p-6 text-sm font-semibold text-slate-300">Feature</th>
-                                <th class="p-6 text-sm font-semibold text-slate-400">Disposable Cameras</th>
-                                <th class="p-6 text-sm font-semibold text-slate-400">Hashtags</th>
-                                <th class="p-6 text-sm font-bold text-indigo-400 bg-indigo-500/5">fotoFlow</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-700/50">
-                             <tr>
-                                <td class="p-6 text-slate-300 font-medium">Photo Quality</td>
-                                <td class="p-6 text-slate-500">Low (grainy, dark)</td>
-                                <td class="p-6 text-slate-500">Compressed</td>
-                                <td class="p-6 text-white font-semibold bg-indigo-500/5">Original High-Res</td>
-                            </tr>
-                            <tr>
-                                <td class="p-6 text-slate-300 font-medium">Availability</td>
-                                <td class="p-6 text-slate-500">Wait 1-2 Weeks</td>
-                                <td class="p-6 text-slate-500">Instant but scattered</td>
-                                <td class="p-6 text-white font-semibold bg-indigo-500/5">Instant Live Feed</td>
-                            </tr>
-                            <tr>
-                                <td class="p-6 text-slate-300 font-medium">Storage</td>
-                                <td class="p-6 text-slate-500">~27 photos/cam</td>
-                                <td class="p-6 text-slate-500">Public</td>
-                                <td class="p-6 text-white font-semibold bg-indigo-500/5">Unlimited & Private</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="py-24 sm:py-32 bg-organic-dark">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center mb-16">
+          <h2 class="text-3xl font-bold tracking-tight text-organic-text sm:text-4xl">Why <span
+              class="text-organic-green">fotoFlow</span>?</h2>
+          <p class="mt-6 text-lg leading-8 text-organic-stone">Don't wait weeks for photos. Don't settle for grainy
+            disposable cameras.</p>
         </div>
+
+        <div class="glass-panel rounded-3xl overflow-hidden border border-organic-mist-light bg-organic-mist/30">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-organic-mist-light">
+                  <th class="p-6 text-sm font-semibold text-organic-stone">Feature</th>
+                  <th class="p-6 text-sm font-semibold text-organic-stone/70">Disposable Cameras</th>
+                  <th class="p-6 text-sm font-semibold text-organic-stone/70">Hashtags</th>
+                  <th class="p-6 text-sm font-bold text-organic-green bg-organic-green/5">fotoFlow</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-organic-mist-light">
+                <tr>
+                  <td class="p-6 text-organic-text font-medium">Photo Quality</td>
+                  <td class="p-6 text-organic-stone">Low (grainy, dark)</td>
+                  <td class="p-6 text-organic-stone">Compressed</td>
+                  <td class="p-6 text-organic-text font-semibold bg-organic-green/5">Original High-Res</td>
+                </tr>
+                <tr>
+                  <td class="p-6 text-organic-text font-medium">Availability</td>
+                  <td class="p-6 text-organic-stone">Wait 1-2 Weeks</td>
+                  <td class="p-6 text-organic-stone">Instant but scattered</td>
+                  <td class="p-6 text-organic-text font-semibold bg-organic-green/5">Instant Live Feed</td>
+                </tr>
+                <tr>
+                  <td class="p-6 text-organic-text font-medium">Storage</td>
+                  <td class="p-6 text-organic-stone">~27 photos/cam</td>
+                  <td class="p-6 text-organic-stone">Public</td>
+                  <td class="p-6 text-organic-text font-semibold bg-organic-green/5">Unlimited & Private</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-800 bg-slate-900/50">
+    <footer class="border-t border-organic-mist-light bg-organic-mist">
       <div class="mx-auto max-w-7xl overflow-hidden px-6 py-12 lg:px-8">
         <div class="flex justify-center gap-8 mb-8">
-            <a href="#" class="text-slate-400 hover:text-white transition-colors">Pricing</a>
-            <a href="#" (click)="$event.preventDefault(); navigateToLogin()" class="text-slate-400 hover:text-white transition-colors">Login</a>
-            <a href="#" class="text-slate-400 hover:text-white transition-colors">Contact</a>
+          <a href="#" class="text-organic-stone hover:text-organic-text transition-colors">Pricing</a>
+          <a href="#" (click)="$event.preventDefault(); navigateToLogin()"
+            class="text-organic-stone hover:text-organic-text transition-colors">Login</a>
+          <a href="#" class="text-organic-stone hover:text-organic-text transition-colors">Contact</a>
         </div>
-        <p class="text-center text-xs leading-5 text-slate-600">&copy; 2024 fotoFlow. All rights reserved.</p>
+        <p class="text-center text-xs leading-5 text-organic-stone/60">&copy; 2024 fotoFlow. All rights reserved.</p>
       </div>
     </footer>
   </main>

@@ -1,31 +1,13 @@
 import {
-  AsyncAction,
-  AsyncScheduler,
   BehaviorSubject,
   Observable,
   Subject,
-  Subscription,
-  argsArgArrayOrObject,
-  createObject,
-  createOperatorSubscriber,
-  innerFrom,
-  isArrayLike,
-  isFunction,
-  mapOneOrManyArgs,
-  mergeMap,
-  noop,
-  popResultSelector
-} from "./chunk-N4LRDPIB.js";
-import {
-  __extends,
-  __read,
-  __spreadArray,
-  init_tslib_es6
-} from "./chunk-BXSU4DDX.js";
+  Subscription
+} from "./chunk-MARUHEWW.js";
 import {
   __spreadProps,
   __spreadValues
-} from "./chunk-R327OCYJ.js";
+} from "./chunk-46DXP6YY.js";
 
 // node_modules/@angular/core/fesm2022/_effect-chunk.mjs
 var activeConsumer = null;
@@ -430,567 +412,6 @@ function runEffect(node) {
   }
 }
 
-// node_modules/rxjs/dist/esm5/internal/observable/forkJoin.js
-function forkJoin() {
-  var args = [];
-  for (var _i = 0; _i < arguments.length; _i++) {
-    args[_i] = arguments[_i];
-  }
-  var resultSelector = popResultSelector(args);
-  var _a = argsArgArrayOrObject(args), sources = _a.args, keys = _a.keys;
-  var result = new Observable(function(subscriber) {
-    var length = sources.length;
-    if (!length) {
-      subscriber.complete();
-      return;
-    }
-    var values = new Array(length);
-    var remainingCompletions = length;
-    var remainingEmissions = length;
-    var _loop_1 = function(sourceIndex2) {
-      var hasValue = false;
-      innerFrom(sources[sourceIndex2]).subscribe(createOperatorSubscriber(subscriber, function(value) {
-        if (!hasValue) {
-          hasValue = true;
-          remainingEmissions--;
-        }
-        values[sourceIndex2] = value;
-      }, function() {
-        return remainingCompletions--;
-      }, void 0, function() {
-        if (!remainingCompletions || !hasValue) {
-          if (!remainingEmissions) {
-            subscriber.next(keys ? createObject(keys, values) : values);
-          }
-          subscriber.complete();
-        }
-      }));
-    };
-    for (var sourceIndex = 0; sourceIndex < length; sourceIndex++) {
-      _loop_1(sourceIndex);
-    }
-  });
-  return resultSelector ? result.pipe(mapOneOrManyArgs(resultSelector)) : result;
-}
-
-// node_modules/rxjs/dist/esm5/internal/observable/fromEvent.js
-init_tslib_es6();
-var nodeEventEmitterMethods = ["addListener", "removeListener"];
-var eventTargetMethods = ["addEventListener", "removeEventListener"];
-var jqueryMethods = ["on", "off"];
-function fromEvent(target, eventName, options, resultSelector) {
-  if (isFunction(options)) {
-    resultSelector = options;
-    options = void 0;
-  }
-  if (resultSelector) {
-    return fromEvent(target, eventName, options).pipe(mapOneOrManyArgs(resultSelector));
-  }
-  var _a = __read(isEventTarget(target) ? eventTargetMethods.map(function(methodName) {
-    return function(handler) {
-      return target[methodName](eventName, handler, options);
-    };
-  }) : isNodeStyleEventEmitter(target) ? nodeEventEmitterMethods.map(toCommonHandlerRegistry(target, eventName)) : isJQueryStyleEventEmitter(target) ? jqueryMethods.map(toCommonHandlerRegistry(target, eventName)) : [], 2), add = _a[0], remove = _a[1];
-  if (!add) {
-    if (isArrayLike(target)) {
-      return mergeMap(function(subTarget) {
-        return fromEvent(subTarget, eventName, options);
-      })(innerFrom(target));
-    }
-  }
-  if (!add) {
-    throw new TypeError("Invalid event target");
-  }
-  return new Observable(function(subscriber) {
-    var handler = function() {
-      var args = [];
-      for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-      }
-      return subscriber.next(1 < args.length ? args : args[0]);
-    };
-    add(handler);
-    return function() {
-      return remove(handler);
-    };
-  });
-}
-function toCommonHandlerRegistry(target, eventName) {
-  return function(methodName) {
-    return function(handler) {
-      return target[methodName](eventName, handler);
-    };
-  };
-}
-function isNodeStyleEventEmitter(target) {
-  return isFunction(target.addListener) && isFunction(target.removeListener);
-}
-function isJQueryStyleEventEmitter(target) {
-  return isFunction(target.on) && isFunction(target.off);
-}
-function isEventTarget(target) {
-  return isFunction(target.addEventListener) && isFunction(target.removeEventListener);
-}
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/performanceTimestampProvider.js
-var performanceTimestampProvider = {
-  now: function() {
-    return (performanceTimestampProvider.delegate || performance).now();
-  },
-  delegate: void 0
-};
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/animationFrameProvider.js
-init_tslib_es6();
-var animationFrameProvider = {
-  schedule: function(callback) {
-    var request = requestAnimationFrame;
-    var cancel = cancelAnimationFrame;
-    var delegate = animationFrameProvider.delegate;
-    if (delegate) {
-      request = delegate.requestAnimationFrame;
-      cancel = delegate.cancelAnimationFrame;
-    }
-    var handle = request(function(timestamp2) {
-      cancel = void 0;
-      callback(timestamp2);
-    });
-    return new Subscription(function() {
-      return cancel === null || cancel === void 0 ? void 0 : cancel(handle);
-    });
-  },
-  requestAnimationFrame: function() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-      args[_i] = arguments[_i];
-    }
-    var delegate = animationFrameProvider.delegate;
-    return ((delegate === null || delegate === void 0 ? void 0 : delegate.requestAnimationFrame) || requestAnimationFrame).apply(void 0, __spreadArray([], __read(args)));
-  },
-  cancelAnimationFrame: function() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-      args[_i] = arguments[_i];
-    }
-    var delegate = animationFrameProvider.delegate;
-    return ((delegate === null || delegate === void 0 ? void 0 : delegate.cancelAnimationFrame) || cancelAnimationFrame).apply(void 0, __spreadArray([], __read(args)));
-  },
-  delegate: void 0
-};
-
-// node_modules/rxjs/dist/esm5/internal/observable/dom/animationFrames.js
-function animationFramesFactory(timestampProvider) {
-  return new Observable(function(subscriber) {
-    var provider = timestampProvider || performanceTimestampProvider;
-    var start = provider.now();
-    var id = 0;
-    var run = function() {
-      if (!subscriber.closed) {
-        id = animationFrameProvider.requestAnimationFrame(function(timestamp2) {
-          id = 0;
-          var now = provider.now();
-          subscriber.next({
-            timestamp: timestampProvider ? now : timestamp2,
-            elapsed: now - start
-          });
-          run();
-        });
-      }
-    };
-    run();
-    return function() {
-      if (id) {
-        animationFrameProvider.cancelAnimationFrame(id);
-      }
-    };
-  });
-}
-var DEFAULT_ANIMATION_FRAMES = animationFramesFactory();
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/AsapAction.js
-init_tslib_es6();
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/immediateProvider.js
-init_tslib_es6();
-
-// node_modules/rxjs/dist/esm5/internal/util/Immediate.js
-var nextHandle = 1;
-var resolved;
-var activeHandles = {};
-function findAndClearHandle(handle) {
-  if (handle in activeHandles) {
-    delete activeHandles[handle];
-    return true;
-  }
-  return false;
-}
-var Immediate = {
-  setImmediate: function(cb) {
-    var handle = nextHandle++;
-    activeHandles[handle] = true;
-    if (!resolved) {
-      resolved = Promise.resolve();
-    }
-    resolved.then(function() {
-      return findAndClearHandle(handle) && cb();
-    });
-    return handle;
-  },
-  clearImmediate: function(handle) {
-    findAndClearHandle(handle);
-  }
-};
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/immediateProvider.js
-var setImmediate = Immediate.setImmediate;
-var clearImmediate = Immediate.clearImmediate;
-var immediateProvider = {
-  setImmediate: function() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-      args[_i] = arguments[_i];
-    }
-    var delegate = immediateProvider.delegate;
-    return ((delegate === null || delegate === void 0 ? void 0 : delegate.setImmediate) || setImmediate).apply(void 0, __spreadArray([], __read(args)));
-  },
-  clearImmediate: function(handle) {
-    var delegate = immediateProvider.delegate;
-    return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearImmediate) || clearImmediate)(handle);
-  },
-  delegate: void 0
-};
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/AsapAction.js
-var AsapAction = (function(_super) {
-  __extends(AsapAction2, _super);
-  function AsapAction2(scheduler, work) {
-    var _this = _super.call(this, scheduler, work) || this;
-    _this.scheduler = scheduler;
-    _this.work = work;
-    return _this;
-  }
-  AsapAction2.prototype.requestAsyncId = function(scheduler, id, delay2) {
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    if (delay2 !== null && delay2 > 0) {
-      return _super.prototype.requestAsyncId.call(this, scheduler, id, delay2);
-    }
-    scheduler.actions.push(this);
-    return scheduler._scheduled || (scheduler._scheduled = immediateProvider.setImmediate(scheduler.flush.bind(scheduler, void 0)));
-  };
-  AsapAction2.prototype.recycleAsyncId = function(scheduler, id, delay2) {
-    var _a;
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    if (delay2 != null ? delay2 > 0 : this.delay > 0) {
-      return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay2);
-    }
-    var actions = scheduler.actions;
-    if (id != null && ((_a = actions[actions.length - 1]) === null || _a === void 0 ? void 0 : _a.id) !== id) {
-      immediateProvider.clearImmediate(id);
-      if (scheduler._scheduled === id) {
-        scheduler._scheduled = void 0;
-      }
-    }
-    return void 0;
-  };
-  return AsapAction2;
-})(AsyncAction);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/AsapScheduler.js
-init_tslib_es6();
-var AsapScheduler = (function(_super) {
-  __extends(AsapScheduler2, _super);
-  function AsapScheduler2() {
-    return _super !== null && _super.apply(this, arguments) || this;
-  }
-  AsapScheduler2.prototype.flush = function(action) {
-    this._active = true;
-    var flushId = this._scheduled;
-    this._scheduled = void 0;
-    var actions = this.actions;
-    var error;
-    action = action || actions.shift();
-    do {
-      if (error = action.execute(action.state, action.delay)) {
-        break;
-      }
-    } while ((action = actions[0]) && action.id === flushId && actions.shift());
-    this._active = false;
-    if (error) {
-      while ((action = actions[0]) && action.id === flushId && actions.shift()) {
-        action.unsubscribe();
-      }
-      throw error;
-    }
-  };
-  return AsapScheduler2;
-})(AsyncScheduler);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/asap.js
-var asapScheduler = new AsapScheduler(AsapAction);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/QueueAction.js
-init_tslib_es6();
-var QueueAction = (function(_super) {
-  __extends(QueueAction2, _super);
-  function QueueAction2(scheduler, work) {
-    var _this = _super.call(this, scheduler, work) || this;
-    _this.scheduler = scheduler;
-    _this.work = work;
-    return _this;
-  }
-  QueueAction2.prototype.schedule = function(state, delay2) {
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    if (delay2 > 0) {
-      return _super.prototype.schedule.call(this, state, delay2);
-    }
-    this.delay = delay2;
-    this.state = state;
-    this.scheduler.flush(this);
-    return this;
-  };
-  QueueAction2.prototype.execute = function(state, delay2) {
-    return delay2 > 0 || this.closed ? _super.prototype.execute.call(this, state, delay2) : this._execute(state, delay2);
-  };
-  QueueAction2.prototype.requestAsyncId = function(scheduler, id, delay2) {
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    if (delay2 != null && delay2 > 0 || delay2 == null && this.delay > 0) {
-      return _super.prototype.requestAsyncId.call(this, scheduler, id, delay2);
-    }
-    scheduler.flush(this);
-    return 0;
-  };
-  return QueueAction2;
-})(AsyncAction);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/QueueScheduler.js
-init_tslib_es6();
-var QueueScheduler = (function(_super) {
-  __extends(QueueScheduler2, _super);
-  function QueueScheduler2() {
-    return _super !== null && _super.apply(this, arguments) || this;
-  }
-  return QueueScheduler2;
-})(AsyncScheduler);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/queue.js
-var queueScheduler = new QueueScheduler(QueueAction);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/AnimationFrameAction.js
-init_tslib_es6();
-var AnimationFrameAction = (function(_super) {
-  __extends(AnimationFrameAction2, _super);
-  function AnimationFrameAction2(scheduler, work) {
-    var _this = _super.call(this, scheduler, work) || this;
-    _this.scheduler = scheduler;
-    _this.work = work;
-    return _this;
-  }
-  AnimationFrameAction2.prototype.requestAsyncId = function(scheduler, id, delay2) {
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    if (delay2 !== null && delay2 > 0) {
-      return _super.prototype.requestAsyncId.call(this, scheduler, id, delay2);
-    }
-    scheduler.actions.push(this);
-    return scheduler._scheduled || (scheduler._scheduled = animationFrameProvider.requestAnimationFrame(function() {
-      return scheduler.flush(void 0);
-    }));
-  };
-  AnimationFrameAction2.prototype.recycleAsyncId = function(scheduler, id, delay2) {
-    var _a;
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    if (delay2 != null ? delay2 > 0 : this.delay > 0) {
-      return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay2);
-    }
-    var actions = scheduler.actions;
-    if (id != null && id === scheduler._scheduled && ((_a = actions[actions.length - 1]) === null || _a === void 0 ? void 0 : _a.id) !== id) {
-      animationFrameProvider.cancelAnimationFrame(id);
-      scheduler._scheduled = void 0;
-    }
-    return void 0;
-  };
-  return AnimationFrameAction2;
-})(AsyncAction);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/AnimationFrameScheduler.js
-init_tslib_es6();
-var AnimationFrameScheduler = (function(_super) {
-  __extends(AnimationFrameScheduler2, _super);
-  function AnimationFrameScheduler2() {
-    return _super !== null && _super.apply(this, arguments) || this;
-  }
-  AnimationFrameScheduler2.prototype.flush = function(action) {
-    this._active = true;
-    var flushId;
-    if (action) {
-      flushId = action.id;
-    } else {
-      flushId = this._scheduled;
-      this._scheduled = void 0;
-    }
-    var actions = this.actions;
-    var error;
-    action = action || actions.shift();
-    do {
-      if (error = action.execute(action.state, action.delay)) {
-        break;
-      }
-    } while ((action = actions[0]) && action.id === flushId && actions.shift());
-    this._active = false;
-    if (error) {
-      while ((action = actions[0]) && action.id === flushId && actions.shift()) {
-        action.unsubscribe();
-      }
-      throw error;
-    }
-  };
-  return AnimationFrameScheduler2;
-})(AsyncScheduler);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/animationFrame.js
-var animationFrameScheduler = new AnimationFrameScheduler(AnimationFrameAction);
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/VirtualTimeScheduler.js
-init_tslib_es6();
-var VirtualTimeScheduler = (function(_super) {
-  __extends(VirtualTimeScheduler2, _super);
-  function VirtualTimeScheduler2(schedulerActionCtor, maxFrames) {
-    if (schedulerActionCtor === void 0) {
-      schedulerActionCtor = VirtualAction;
-    }
-    if (maxFrames === void 0) {
-      maxFrames = Infinity;
-    }
-    var _this = _super.call(this, schedulerActionCtor, function() {
-      return _this.frame;
-    }) || this;
-    _this.maxFrames = maxFrames;
-    _this.frame = 0;
-    _this.index = -1;
-    return _this;
-  }
-  VirtualTimeScheduler2.prototype.flush = function() {
-    var _a = this, actions = _a.actions, maxFrames = _a.maxFrames;
-    var error;
-    var action;
-    while ((action = actions[0]) && action.delay <= maxFrames) {
-      actions.shift();
-      this.frame = action.delay;
-      if (error = action.execute(action.state, action.delay)) {
-        break;
-      }
-    }
-    if (error) {
-      while (action = actions.shift()) {
-        action.unsubscribe();
-      }
-      throw error;
-    }
-  };
-  VirtualTimeScheduler2.frameTimeFactor = 10;
-  return VirtualTimeScheduler2;
-})(AsyncScheduler);
-var VirtualAction = (function(_super) {
-  __extends(VirtualAction2, _super);
-  function VirtualAction2(scheduler, work, index) {
-    if (index === void 0) {
-      index = scheduler.index += 1;
-    }
-    var _this = _super.call(this, scheduler, work) || this;
-    _this.scheduler = scheduler;
-    _this.work = work;
-    _this.index = index;
-    _this.active = true;
-    _this.index = scheduler.index = index;
-    return _this;
-  }
-  VirtualAction2.prototype.schedule = function(state, delay2) {
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    if (Number.isFinite(delay2)) {
-      if (!this.id) {
-        return _super.prototype.schedule.call(this, state, delay2);
-      }
-      this.active = false;
-      var action = new VirtualAction2(this.scheduler, this.work);
-      this.add(action);
-      return action.schedule(state, delay2);
-    } else {
-      return Subscription.EMPTY;
-    }
-  };
-  VirtualAction2.prototype.requestAsyncId = function(scheduler, id, delay2) {
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    this.delay = scheduler.frame + delay2;
-    var actions = scheduler.actions;
-    actions.push(this);
-    actions.sort(VirtualAction2.sortActions);
-    return 1;
-  };
-  VirtualAction2.prototype.recycleAsyncId = function(scheduler, id, delay2) {
-    if (delay2 === void 0) {
-      delay2 = 0;
-    }
-    return void 0;
-  };
-  VirtualAction2.prototype._execute = function(state, delay2) {
-    if (this.active === true) {
-      return _super.prototype._execute.call(this, state, delay2);
-    }
-  };
-  VirtualAction2.sortActions = function(a, b) {
-    if (a.delay === b.delay) {
-      if (a.index === b.index) {
-        return 0;
-      } else if (a.index > b.index) {
-        return 1;
-      } else {
-        return -1;
-      }
-    } else if (a.delay > b.delay) {
-      return 1;
-    } else {
-      return -1;
-    }
-  };
-  return VirtualAction2;
-})(AsyncAction);
-
-// node_modules/rxjs/dist/esm5/internal/util/isObservable.js
-function isObservable(obj) {
-  return !!obj && (obj instanceof Observable || isFunction(obj.lift) && isFunction(obj.subscribe));
-}
-
-// node_modules/rxjs/dist/esm5/internal/observable/bindCallbackInternals.js
-init_tslib_es6();
-
-// node_modules/rxjs/dist/esm5/internal/observable/defer.js
-function defer(observableFactory) {
-  return new Observable(function(subscriber) {
-    innerFrom(observableFactory()).subscribe(subscriber);
-  });
-}
-
-// node_modules/rxjs/dist/esm5/internal/observable/generate.js
-init_tslib_es6();
-
-// node_modules/rxjs/dist/esm5/internal/observable/never.js
-var NEVER = new Observable(noop);
-
 // node_modules/@angular/core/fesm2022/_not_found-chunk.mjs
 var _currentInjector = void 0;
 function getCurrentInjector() {
@@ -1089,8 +510,8 @@ function setAlternateWeakRefImpl(impl) {
 
 // node_modules/@angular/core/fesm2022/primitives-signals.mjs
 var formatter = {
-  header: (sig, config2) => {
-    if (!isSignal(sig) || config2?.ngSkipFormatting) return null;
+  header: (sig, config) => {
+    if (!isSignal(sig) || config?.ngSkipFormatting) return null;
     let value;
     try {
       value = sig();
@@ -1101,7 +522,7 @@ var formatter = {
     const isPrimitive = value === null || !Array.isArray(value) && typeof value !== "object";
     return ["span", {}, ["span", {}, `${kind}(`], (() => {
       if (isSignal(value)) {
-        return formatter.header(value, config2);
+        return formatter.header(value, config);
       } else if (isPrimitive && value !== void 0 && typeof value !== "function") {
         return ["object", {
           object: value
@@ -1111,16 +532,16 @@ var formatter = {
       }
     })(), ["span", {}, `)`]];
   },
-  hasBody: (sig, config2) => {
+  hasBody: (sig, config) => {
     if (!isSignal(sig)) return false;
     try {
       sig();
     } catch {
       return false;
     }
-    return !config2?.ngSkipFormatting;
+    return !config?.ngSkipFormatting;
   },
-  body: (sig, config2) => {
+  body: (sig, config) => {
     const color = "var(--sys-color-primary)";
     return ["div", {
       style: `background: #FFFFFF10; padding-left: 4px; padding-top: 2px; padding-bottom: 2px;`
@@ -1130,14 +551,14 @@ var formatter = {
       style: `padding-left: .5rem;`
     }, ["object", {
       object: sig(),
-      config: config2
+      config
     }]], ["div", {
       style: `color: ${color}`
     }, "Signal function: "], ["div", {
       style: `padding-left: .5rem;`
     }, ["object", {
       object: sig,
-      config: __spreadProps(__spreadValues({}, config2), {
+      config: __spreadProps(__spreadValues({}, config), {
         ngSkipFormatting: true
       })
     }]]];
@@ -1339,7 +760,7 @@ function isForwardRef(fn) {
 }
 function assertNumber(actual, msg) {
   if (!(typeof actual === "number")) {
-    throwError2(msg, typeof actual, "number", "===");
+    throwError(msg, typeof actual, "number", "===");
   }
 }
 function assertNumberInRange(actual, minInclusive, maxInclusive) {
@@ -1349,91 +770,91 @@ function assertNumberInRange(actual, minInclusive, maxInclusive) {
 }
 function assertString(actual, msg) {
   if (!(typeof actual === "string")) {
-    throwError2(msg, actual === null ? "null" : typeof actual, "string", "===");
+    throwError(msg, actual === null ? "null" : typeof actual, "string", "===");
   }
 }
 function assertFunction(actual, msg) {
   if (!(typeof actual === "function")) {
-    throwError2(msg, actual === null ? "null" : typeof actual, "function", "===");
+    throwError(msg, actual === null ? "null" : typeof actual, "function", "===");
   }
 }
 function assertEqual(actual, expected, msg) {
   if (!(actual == expected)) {
-    throwError2(msg, actual, expected, "==");
+    throwError(msg, actual, expected, "==");
   }
 }
 function assertNotEqual(actual, expected, msg) {
   if (!(actual != expected)) {
-    throwError2(msg, actual, expected, "!=");
+    throwError(msg, actual, expected, "!=");
   }
 }
 function assertSame(actual, expected, msg) {
   if (!(actual === expected)) {
-    throwError2(msg, actual, expected, "===");
+    throwError(msg, actual, expected, "===");
   }
 }
 function assertNotSame(actual, expected, msg) {
   if (!(actual !== expected)) {
-    throwError2(msg, actual, expected, "!==");
+    throwError(msg, actual, expected, "!==");
   }
 }
 function assertLessThan(actual, expected, msg) {
   if (!(actual < expected)) {
-    throwError2(msg, actual, expected, "<");
+    throwError(msg, actual, expected, "<");
   }
 }
 function assertLessThanOrEqual(actual, expected, msg) {
   if (!(actual <= expected)) {
-    throwError2(msg, actual, expected, "<=");
+    throwError(msg, actual, expected, "<=");
   }
 }
 function assertGreaterThan(actual, expected, msg) {
   if (!(actual > expected)) {
-    throwError2(msg, actual, expected, ">");
+    throwError(msg, actual, expected, ">");
   }
 }
 function assertGreaterThanOrEqual(actual, expected, msg) {
   if (!(actual >= expected)) {
-    throwError2(msg, actual, expected, ">=");
+    throwError(msg, actual, expected, ">=");
   }
 }
 function assertNotDefined(actual, msg) {
   if (actual != null) {
-    throwError2(msg, actual, null, "==");
+    throwError(msg, actual, null, "==");
   }
 }
 function assertDefined(actual, msg) {
   if (actual == null) {
-    throwError2(msg, actual, null, "!=");
+    throwError(msg, actual, null, "!=");
   }
 }
-function throwError2(msg, actual, expected, comparison) {
+function throwError(msg, actual, expected, comparison) {
   throw new Error(`ASSERTION ERROR: ${msg}` + (comparison == null ? "" : ` [Expected=> ${expected} ${comparison} ${actual} <=Actual]`));
 }
 function assertDomNode(node) {
   if (!(node instanceof Node)) {
-    throwError2(`The provided value must be an instance of a DOM Node but got ${stringify(node)}`);
+    throwError(`The provided value must be an instance of a DOM Node but got ${stringify(node)}`);
   }
 }
 function assertElement(node) {
   if (!(node instanceof Element)) {
-    throwError2(`The provided value must be an element but got ${stringify(node)}`);
+    throwError(`The provided value must be an element but got ${stringify(node)}`);
   }
 }
 function assertIndexInRange(arr, index) {
   assertDefined(arr, "Array must be defined.");
   const maxLen = arr.length;
   if (index < 0 || index >= maxLen) {
-    throwError2(`Index expected to be less than ${maxLen} but got ${index}`);
+    throwError(`Index expected to be less than ${maxLen} but got ${index}`);
   }
 }
 function assertOneOf(value, ...validValues) {
   if (validValues.indexOf(value) !== -1) return true;
-  throwError2(`Expected value to be one of ${JSON.stringify(validValues)} but was ${JSON.stringify(value)}.`);
+  throwError(`Expected value to be one of ${JSON.stringify(validValues)} but was ${JSON.stringify(value)}.`);
 }
 function assertNotReactive(fn) {
   if (getActiveConsumer() !== null) {
-    throwError2(`${fn}() should never be called in a reactive context.`);
+    throwError(`${fn}() should never be called in a reactive context.`);
   }
 }
 function ɵɵdefineInjectable(opts) {
@@ -1505,11 +926,11 @@ var InjectionToken = class {
 };
 var _injectorProfilerContext;
 function getInjectorProfilerContext() {
-  !ngDevMode && throwError2("getInjectorProfilerContext should never be called in production mode");
+  !ngDevMode && throwError("getInjectorProfilerContext should never be called in production mode");
   return _injectorProfilerContext;
 }
 function setInjectorProfilerContext(context) {
-  !ngDevMode && throwError2("setInjectorProfilerContext should never be called in production mode");
+  !ngDevMode && throwError("setInjectorProfilerContext should never be called in production mode");
   const previous = _injectorProfilerContext;
   _injectorProfilerContext = context;
   return previous;
@@ -1524,7 +945,7 @@ function removeProfiler(profiler) {
   }
 }
 function setInjectorProfiler(injectorProfiler2) {
-  !ngDevMode && throwError2("setInjectorProfiler should never be called in production mode");
+  !ngDevMode && throwError("setInjectorProfiler should never be called in production mode");
   if (injectorProfiler2 !== null) {
     if (!injectorProfilerCallbacks.includes(injectorProfiler2)) {
       injectorProfilerCallbacks.push(injectorProfiler2);
@@ -1536,14 +957,14 @@ function setInjectorProfiler(injectorProfiler2) {
   }
 }
 function injectorProfiler(event) {
-  !ngDevMode && throwError2("Injector profiler should never be called in production mode");
+  !ngDevMode && throwError("Injector profiler should never be called in production mode");
   for (let i = 0; i < injectorProfilerCallbacks.length; i++) {
     const injectorProfilerCallback = injectorProfilerCallbacks[i];
     injectorProfilerCallback(event);
   }
 }
 function emitProviderConfiguredEvent(eventProvider, isViewProvider = false) {
-  !ngDevMode && throwError2("Injector profiler should never be called in production mode");
+  !ngDevMode && throwError("Injector profiler should never be called in production mode");
   let token;
   if (typeof eventProvider === "function") {
     token = eventProvider;
@@ -1567,7 +988,7 @@ function emitProviderConfiguredEvent(eventProvider, isViewProvider = false) {
   });
 }
 function emitInjectorToCreateInstanceEvent(token) {
-  !ngDevMode && throwError2("Injector profiler should never be called in production mode");
+  !ngDevMode && throwError("Injector profiler should never be called in production mode");
   injectorProfiler({
     type: 5,
     context: getInjectorProfilerContext(),
@@ -1575,7 +996,7 @@ function emitInjectorToCreateInstanceEvent(token) {
   });
 }
 function emitInstanceCreatedByInjectorEvent(instance) {
-  !ngDevMode && throwError2("Injector profiler should never be called in production mode");
+  !ngDevMode && throwError("Injector profiler should never be called in production mode");
   injectorProfiler({
     type: 1,
     context: getInjectorProfilerContext(),
@@ -1585,7 +1006,7 @@ function emitInstanceCreatedByInjectorEvent(instance) {
   });
 }
 function emitInjectEvent(token, value, flags) {
-  !ngDevMode && throwError2("Injector profiler should never be called in production mode");
+  !ngDevMode && throwError("Injector profiler should never be called in production mode");
   injectorProfiler({
     type: 0,
     context: getInjectorProfilerContext(),
@@ -1597,7 +1018,7 @@ function emitInjectEvent(token, value, flags) {
   });
 }
 function emitEffectCreatedEvent(effect2) {
-  !ngDevMode && throwError2("Injector profiler should never be called in production mode");
+  !ngDevMode && throwError("Injector profiler should never be called in production mode");
   injectorProfiler({
     type: 3,
     context: getInjectorProfilerContext(),
@@ -1605,7 +1026,7 @@ function emitEffectCreatedEvent(effect2) {
   });
 }
 function emitAfterRenderEffectPhaseCreatedEvent(effectPhase) {
-  !ngDevMode && throwError2("Injector profiler should never be called in production mode");
+  !ngDevMode && throwError("Injector profiler should never be called in production mode");
   injectorProfiler({
     type: 4,
     context: getInjectorProfilerContext(),
@@ -1613,7 +1034,7 @@ function emitAfterRenderEffectPhaseCreatedEvent(effectPhase) {
   });
 }
 function runInInjectorProfilerContext(injector, token, callback) {
-  !ngDevMode && throwError2("runInInjectorProfilerContext should never be called in production mode");
+  !ngDevMode && throwError("runInInjectorProfilerContext should never be called in production mode");
   const prevInjectContext = setInjectorProfilerContext({
     injector,
     token
@@ -1911,13 +1332,13 @@ function newArray(size, value) {
   }
   return list;
 }
-function arraySplice(array, index, count2) {
-  const length = array.length - count2;
+function arraySplice(array, index, count) {
+  const length = array.length - count;
   while (index < length) {
-    array[index] = array[index + count2];
+    array[index] = array[index + count];
     index++;
   }
-  while (count2--) {
+  while (count--) {
     array.pop();
   }
 }
@@ -2690,28 +2111,28 @@ function assertTNodeForTView(tNode, tView) {
       return;
     }
   }
-  throwError2("This TNode does not belong to this TView.");
+  throwError("This TNode does not belong to this TView.");
 }
 function assertTNode(tNode) {
   assertDefined(tNode, "TNode must be defined");
   if (!(tNode && typeof tNode === "object" && tNode.hasOwnProperty("directiveStylingLast"))) {
-    throwError2("Not of type TNode, got: " + tNode);
+    throwError("Not of type TNode, got: " + tNode);
   }
 }
 function assertTIcu(tIcu) {
   assertDefined(tIcu, "Expected TIcu to be defined");
   if (!(typeof tIcu.currentCaseLViewIndex === "number")) {
-    throwError2("Object is not of TIcu type.");
+    throwError("Object is not of TIcu type.");
   }
 }
 function assertComponentType(actual, msg = "Type passed in is not ComponentType, it does not have 'ɵcmp' property.") {
   if (!getComponentDef(actual)) {
-    throwError2(msg);
+    throwError(msg);
   }
 }
 function assertNgModuleType(actual, msg = "Type passed in is not NgModuleType, it does not have 'ɵmod' property.") {
   if (!getNgModuleDef(actual)) {
-    throwError2(msg);
+    throwError(msg);
   }
 }
 function assertHasParent(tNode) {
@@ -2737,7 +2158,7 @@ function assertFirstUpdatePass(tView, errMessage) {
 }
 function assertDirectiveDef(obj) {
   if (obj.type === void 0 || obj.selectors == void 0 || obj.inputs === void 0) {
-    throwError2(`Expected a DirectiveDef/ComponentDef and this object does not seem to have the expected shape.`);
+    throwError(`Expected a DirectiveDef/ComponentDef and this object does not seem to have the expected shape.`);
   }
 }
 function assertIndexInDeclRange(tView, index) {
@@ -2749,7 +2170,7 @@ function assertIndexInExpandoRange(lView, index) {
 }
 function assertBetween(lower, upper, index) {
   if (!(lower <= index && index < upper)) {
-    throwError2(`Index out of range (expecting ${lower} <= ${index} < ${upper})`);
+    throwError(`Index out of range (expecting ${lower} <= ${index} < ${upper})`);
   }
 }
 function assertProjectionSlots(lView, errMessage) {
@@ -3020,15 +2441,15 @@ function getContextLView() {
   return contextLView;
 }
 function isInCheckNoChangesMode() {
-  !ngDevMode && throwError2("Must never be called in production mode");
+  !ngDevMode && throwError("Must never be called in production mode");
   return _checkNoChangesMode !== CheckNoChangesMode.Off;
 }
 function isExhaustiveCheckNoChanges() {
-  !ngDevMode && throwError2("Must never be called in production mode");
+  !ngDevMode && throwError("Must never be called in production mode");
   return _checkNoChangesMode === CheckNoChangesMode.Exhaustive;
 }
 function setIsInCheckNoChangesMode(mode) {
-  !ngDevMode && throwError2("Must never be called in production mode");
+  !ngDevMode && throwError("Must never be called in production mode");
   _checkNoChangesMode = mode;
 }
 function isRefreshingViews() {
@@ -3056,10 +2477,10 @@ function setBindingIndex(value) {
 function nextBindingIndex() {
   return instructionState.lFrame.bindingIndex++;
 }
-function incrementBindingIndex(count2) {
+function incrementBindingIndex(count) {
   const lFrame = instructionState.lFrame;
   const index = lFrame.bindingIndex;
-  lFrame.bindingIndex = lFrame.bindingIndex + count2;
+  lFrame.bindingIndex = lFrame.bindingIndex + count;
   return index;
 }
 function isInI18nBlock() {
@@ -3418,13 +2839,13 @@ var EventEmitter_ = class extends Subject {
   }
 };
 var EventEmitter = EventEmitter_;
-function noop2(...args) {
+function noop(...args) {
 }
 function scheduleCallbackWithRafRace(callback) {
   let timeoutId;
   let animationFrameId;
   function cleanup() {
-    callback = noop2;
+    callback = noop;
     try {
       if (animationFrameId !== void 0 && typeof cancelAnimationFrame === "function") {
         cancelAnimationFrame(animationFrameId);
@@ -3450,7 +2871,7 @@ function scheduleCallbackWithRafRace(callback) {
 function scheduleCallbackWithMicrotask(callback) {
   queueMicrotask(() => callback());
   return () => {
-    callback = noop2;
+    callback = noop;
   };
 }
 var AsyncStackTaggingZoneSpec = class {
@@ -3532,7 +2953,7 @@ var NgZone = class _NgZone {
   }
   runTask(fn, applyThis, applyArgs, name) {
     const zone = this._inner;
-    const task = zone.scheduleEventTask("NgZoneEvent: " + name, fn, EMPTY_PAYLOAD, noop2, noop2);
+    const task = zone.scheduleEventTask("NgZoneEvent: " + name, fn, EMPTY_PAYLOAD, noop, noop);
     try {
       return zone.runTask(task, applyThis, applyArgs);
     } finally {
@@ -3741,8 +3162,8 @@ var globalErrorListeners = new InjectionToken(typeof ngDevMode !== void 0 && ngD
     if (false) {
       return;
     }
-    const window2 = inject2(DOCUMENT).defaultView;
-    if (!window2) {
+    const window = inject2(DOCUMENT).defaultView;
+    if (!window) {
       return;
     }
     const errorHandler = inject2(INTERNAL_APPLICATION_ERROR_HANDLER);
@@ -3761,8 +3182,8 @@ var globalErrorListeners = new InjectionToken(typeof ngDevMode !== void 0 && ngD
       e.preventDefault();
     };
     const setupEventListeners = () => {
-      window2.addEventListener("unhandledrejection", rejectionListener);
-      window2.addEventListener("error", errorListener);
+      window.addEventListener("unhandledrejection", rejectionListener);
+      window.addEventListener("error", errorListener);
     };
     if (typeof Zone !== "undefined") {
       Zone.root.run(setupEventListeners);
@@ -3770,8 +3191,8 @@ var globalErrorListeners = new InjectionToken(typeof ngDevMode !== void 0 && ngD
       setupEventListeners();
     }
     inject2(DestroyRef).onDestroy(() => {
-      window2.removeEventListener("error", errorListener);
-      window2.removeEventListener("unhandledrejection", rejectionListener);
+      window.removeEventListener("error", errorListener);
+      window.removeEventListener("unhandledrejection", rejectionListener);
     });
   }
 });
@@ -3875,11 +3296,11 @@ var ZoneAwareEffectScheduler = class {
   }
   remove(handle) {
     const zone = handle.zone;
-    const queue2 = this.queues.get(zone);
-    if (!queue2.has(handle)) {
+    const queue = this.queues.get(zone);
+    if (!queue.has(handle)) {
       return;
     }
-    queue2.delete(handle);
+    queue.delete(handle);
     if (handle.dirty) {
       this.dirtyEffectCount--;
     }
@@ -3889,20 +3310,20 @@ var ZoneAwareEffectScheduler = class {
     if (!this.queues.has(zone)) {
       this.queues.set(zone, /* @__PURE__ */ new Set());
     }
-    const queue2 = this.queues.get(zone);
-    if (queue2.has(handle)) {
+    const queue = this.queues.get(zone);
+    if (queue.has(handle)) {
       return;
     }
-    queue2.add(handle);
+    queue.add(handle);
   }
   flush() {
     while (this.dirtyEffectCount > 0) {
       let ranOneEffect = false;
-      for (const [zone, queue2] of this.queues) {
+      for (const [zone, queue] of this.queues) {
         if (zone === null) {
-          ranOneEffect ||= this.flushQueue(queue2);
+          ranOneEffect ||= this.flushQueue(queue);
         } else {
-          ranOneEffect ||= zone.run(() => this.flushQueue(queue2));
+          ranOneEffect ||= zone.run(() => this.flushQueue(queue));
         }
       }
       if (!ranOneEffect) {
@@ -3910,9 +3331,9 @@ var ZoneAwareEffectScheduler = class {
       }
     }
   }
-  flushQueue(queue2) {
+  flushQueue(queue) {
     let ranOneEffect = false;
-    for (const handle of queue2) {
+    for (const handle of queue) {
       if (!handle.dirty) {
         continue;
       }
@@ -4446,10 +3867,6 @@ export {
   setThrowInvalidWriteToSignalError,
   signalSetFn,
   SIGNAL_NODE,
-  isObservable,
-  defer,
-  forkJoin,
-  fromEvent,
   setCurrentInjector,
   setAlternateWeakRefImpl,
   Version,
@@ -4480,7 +3897,7 @@ export {
   assertGreaterThanOrEqual,
   assertNotDefined,
   assertDefined,
-  throwError2 as throwError,
+  throwError,
   assertDomNode,
   assertElement,
   assertIndexInRange,
@@ -4743,4 +4160,4 @@ export {
   ResourceImpl,
   encapsulateResourceError
 };
-//# sourceMappingURL=chunk-DW7O4EWI.js.map
+//# sourceMappingURL=chunk-MFWHBAO5.js.map

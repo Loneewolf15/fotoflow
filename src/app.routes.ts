@@ -14,12 +14,12 @@ import { map, take, filter } from 'rxjs/operators';
 const authGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  
+
   // We need to wait for the auth state to be determined (it might be null initially while loading)
   // But for now, let's just check the current value. 
   // Ideally AuthService exposes an observable or we use an effect.
   // Since we are using signals, we can convert to observable.
-  
+
   return toObservable(authService.currentUser).pipe(
     filter(user => user !== undefined), // Wait if undefined (if we had a loading state) - here we just assume null is not logged in
     take(1),
@@ -33,24 +33,32 @@ const authGuard = () => {
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
-  { 
-    path: 'signup', 
-    loadComponent: () => import('./components/signup/signup.component').then(m => m.SignupComponent) 
+  {
+    path: 'signup',
+    loadComponent: () => import('./components/signup/signup.component').then(m => m.SignupComponent)
   },
-  { 
-    path: 'dashboard', 
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./components/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'dashboard',
     component: HostDashboardComponent,
-    canActivate: [authGuard] 
+    canActivate: [authGuard]
   },
-  { 
-    path: 'create-event', 
+  {
+    path: 'create-event',
     component: EventCreatorComponent,
     canActivate: [authGuard]
   },
   { path: 'event/:id', component: GuestViewComponent },
-  { path: 'slideshow', component: SlideshowComponent },
-  { 
-    path: 'book-editor', 
+  {
+    path: 'slideshow',
+    component: SlideshowComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'book-editor',
     loadComponent: () => import('./components/book-editor/book-editor.component').then(m => m.BookEditorComponent),
     canActivate: [authGuard]
   },

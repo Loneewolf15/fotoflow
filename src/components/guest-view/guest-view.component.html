@@ -1,225 +1,346 @@
-<div class="min-h-screen w-full bg-slate-900 text-white flex flex-col items-center justify-center text-center transition-all duration-300 p-4 relative overflow-hidden">
-  
-  <!-- Background Image Layer -->
-  @if (coverPhotoStyle()) {
+<div
+    class="min-h-screen w-full bg-organic-dark text-organic-text flex flex-col items-center justify-center text-center transition-all duration-300 p-4 relative overflow-hidden">
+
+    <!-- Background Image Layer -->
+    @if (coverPhotoStyle()) {
     <div class="absolute inset-0 bg-cover bg-center z-0 transition-opacity duration-1000"
-         [style.background-image]="coverPhotoStyle()">
+        [style.background-image]="coverPhotoStyle()">
     </div>
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
-  }
+    }
 
-  <!-- Content Layer -->
-  <div class="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center">
-      
-      <!-- Debug Indicator (Temporary) -->
-      <!-- <p class="text-xs text-red-500 absolute top-0 left-0 p-2">Debug: GuestView Loaded. ID: {{ event()?.id }} Status: {{ eventStatus() }} Loading: {{ isLoading() }}</p> -->
+    <!-- Content Layer -->
+    <div class="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center">
 
-      @if (isLoading()) {
+        <!-- Debug Indicator (Temporary) -->
+        <!-- <p class="text-xs text-red-500 absolute top-0 left-0 p-2">Debug: GuestView Loaded. ID: {{ event()?.id }} Status: {{ eventStatus() }} Loading: {{ isLoading() }}</p> -->
+
+        @if (isLoading()) {
         <div class="flex flex-col items-center justify-center py-20">
-            <svg class="animate-spin h-12 w-12 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-12 w-12 text-organic-green mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
             </svg>
-            <p class="text-lg text-slate-300 font-medium">Loading Event...</p>
+            <p class="text-lg text-organic-stone font-medium">Loading Event...</p>
         </div>
-      } @else if (event()) {
+        } @else if (event()) {
         <div class="w-full animate-fade-in-up">
             <div class="mb-8">
-            <h1 class="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-pink-200 drop-shadow-lg" [style.font-family]="event()!.theme.style === 'Luxury' ? 'Playfair Display, serif' : 'inherit'">
-                {{ event()!.coupleNames }}
-            </h1>
-            <p class="mt-2 text-xl text-slate-200 font-light tracking-wide">{{ event()!.eventDate }}</p>
+                <h1 class="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-organic-green via-white to-teal-200 drop-shadow-lg"
+                    [style.font-family]="event()!.theme.style === 'Luxury' ? 'Playfair Display, serif' : 'inherit'">
+                    {{ event()!.coupleNames }}
+                </h1>
+                <p class="mt-2 text-xl text-organic-stone font-light tracking-wide">{{ event()!.eventDate }}</p>
             </div>
 
             @if (eventStatus() === 'upcoming') {
-                <app-countdown [event]="event()!" (eventStarted)="onEventStarted()"></app-countdown>
+            <app-countdown [event]="event()!" (eventStarted)="onEventStarted()"></app-countdown>
             } @else if (eventStatus() === 'ended') {
-                <div class="text-center py-12 animate-fade-in">
-                    <h2 class="text-3xl font-bold mb-4 text-white">Gallery Closed</h2>
-                    <p class="text-lg text-slate-300">This event has ended. Thank you for sharing your memories!</p>
-                </div>
+            <div class="text-center py-12 animate-fade-in">
+                <h2 class="text-3xl font-bold mb-4 text-organic-text">Gallery Closed</h2>
+                <p class="text-lg text-organic-stone">This event has ended. Thank you for sharing your memories!</p>
+            </div>
             } @else {
-                <!-- Active Event Flow -->
-                @switch (uploadState()) {
-                @case ('idle') {
-                    <div class="w-full max-w-md mx-auto space-y-6 animate-fade-in">
-                    @if (cameraError()) {
-                        <div class="bg-red-900/80 border-l-4 border-red-500 text-red-100 p-4 rounded-xl text-left shadow-lg backdrop-blur-md" role="alert">
-                        <p class="font-bold">Camera Error</p>
-                        <p>{{ cameraError() }}</p>
-                        </div>
-                    }
-                    @if (validationError()) {
-                        <div class="bg-red-900/80 border-l-4 border-red-500 text-red-100 p-4 rounded-xl text-left shadow-lg backdrop-blur-md" role="alert">
-                        <p class="font-bold">Upload Rejected</p>
-                        <p>{{ validationError() }}</p>
-                        </div>
-                    }
-                    
-                    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-xl">
-                        <h2 class="text-2xl sm:text-3xl font-semibold text-white mb-2">Share a Memory</h2>
-                        <p class="text-slate-300 mb-6">Capture the moment or add from your gallery.</p>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <button (click)="startCamera()" class="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-slate-500 hover:border-indigo-400 hover:bg-white/5 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-indigo-300 group-hover:text-indigo-200 group-hover:scale-110 transition-transform"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
-                            <span class="font-semibold text-white group-hover:text-indigo-100">Snap Photo</span>
-                            </button>
-                            <label for="file-upload" class="cursor-pointer group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-slate-500 hover:border-pink-400 hover:bg-white/5 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-pink-300 group-hover:text-pink-200 group-hover:scale-110 transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg>
-                            <span class="font-semibold text-white group-hover:text-pink-100">Upload</span>
-                            <input id="file-upload" name="file-upload" type="file" class="sr-only" accept="image/*" (change)="onFileSelected($event)">
-                            </label>
-                        </div>
-                    </div>
-                    </div>
+            <!-- Active Event Flow -->
+            @switch (uploadState()) {
+            @case ('idle') {
+            <div class="w-full max-w-md mx-auto space-y-6 animate-fade-in">
+                @if (cameraError()) {
+                <div class="bg-red-900/80 border-l-4 border-red-500 text-red-100 p-4 rounded-xl text-left shadow-lg backdrop-blur-md"
+                    role="alert">
+                    <p class="font-bold">Camera Error</p>
+                    <p>{{ cameraError() }}</p>
+                </div>
                 }
-                @case ('capturing') {
-                    <div class="w-full max-w-md mx-auto animate-fade-in">
-                        <div class="relative rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-                            <video #videoElement autoplay playsinline class="w-full bg-black"></video>
-                        </div>
-                        <div class="mt-6 flex gap-4 justify-center items-center">
-                            <button (click)="capturePhoto()" class="px-8 py-4 rounded-full font-bold text-white shadow-lg bg-gradient-to-r from-indigo-500 to-pink-500 hover:scale-105 transition-transform flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-                                Capture
-                            </button>
-                            <button (click)="switchCamera()" class="p-4 rounded-full bg-white/10 text-white shadow-lg border border-white/20 hover:bg-white/20 transition-colors backdrop-blur-md" title="Switch Camera">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><path d="m20 12-3-3-3 3"/><path d="m4 12 3 3 3-3"/></svg>
-                            </button>
-                            <button (click)="stopCamera()" class="px-6 py-4 rounded-full font-semibold bg-slate-800/80 text-white hover:bg-slate-700/80 transition-colors backdrop-blur-md border border-white/10">
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
+                @if (validationError()) {
+                <div class="bg-red-900/80 border-l-4 border-red-500 text-red-100 p-4 rounded-xl text-left shadow-lg backdrop-blur-md"
+                    role="alert">
+                    <p class="font-bold">Upload Rejected</p>
+                    <p>{{ validationError() }}</p>
+                </div>
                 }
-                @case ('checking') {
-                    <div class="flex flex-col items-center justify-center animate-fade-in py-12">
-                        <div class="relative">
-                            <div class="absolute inset-0 bg-indigo-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
-                            <svg class="relative animate-spin h-16 w-16 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        </div>
-                        <p class="mt-6 text-xl text-white font-medium">Checking photo quality...</p>
-                    </div>
-                }
-                @case ('validating') {
-                    <div class="flex flex-col items-center justify-center animate-fade-in py-12">
-                        <div class="relative">
-                            <div class="absolute inset-0 bg-pink-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
-                            <svg class="relative animate-spin h-16 w-16 text-pink-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        </div>
-                        <p class="mt-6 text-xl text-white font-medium">AI is validating image context...</p>
-                    </div>
-                }
-                @case ('preview') {
-                    <div class="w-full max-w-md mx-auto space-y-6 animate-fade-in">
-                    <div class="relative rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black/50 backdrop-blur-sm p-2">
-                        <img [src]="previewUrl()" alt="Selected photo preview" class="rounded-xl w-full object-contain max-h-[50vh]">
-                    </div>
-                    
-                    @if (blurWarning()) {
-                        <div class="bg-yellow-900/80 border-l-4 border-yellow-500 text-yellow-100 p-4 rounded-xl text-left backdrop-blur-md shadow-lg" role="alert">
-                        <p class="font-bold flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            Blur Guard
-                        </p>
-                        <p class="text-sm mt-1">This photo looks a bit blurry. You can still upload it, or try another one!</p>
-                        </div>
-                    }
-                    
-                    <div class="text-left bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                        <label for="guestNote" class="block text-sm font-medium leading-6 text-indigo-200">Leave a note for the couple?</label>
-                        <div class="mt-2">
-                            <textarea id="guestNote" name="guestNote" rows="3" [(ngModel)]="guestNote" class="block w-full rounded-lg border-0 bg-black/30 py-3 px-4 text-white shadow-inner ring-1 ring-inset ring-white/10 placeholder:text-white/30 focus:ring-2 focus:ring-inset focus:ring-indigo-400 sm:text-sm sm:leading-6 transition-all" placeholder="e.g., What a beautiful day! So happy for you both."></textarea>
-                        </div>
-                    </div>
 
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        @if(isGeminiConfigured) {
-                        <button (click)="generateCaption()" [disabled]="isGeneratingCaption()" class="w-full flex-1 px-4 py-3.5 rounded-xl font-semibold border border-white/20 text-white hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md shadow-lg">
-                            @if (isGeneratingCaption()) {
-                                <span class="flex items-center justify-center">
-                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    Generating...
-                                </span>
-                            } @else {
-                                ✨ Generate Caption
-                            }
+                <div
+                    class="bg-organic-mist/30 backdrop-blur-md rounded-2xl p-6 border border-organic-mist-light shadow-xl">
+                    <h2 class="text-2xl sm:text-3xl font-semibold text-organic-text mb-2">Share a Memory</h2>
+                    <p class="text-organic-stone mb-6">Capture the moment or add from your gallery.</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button (click)="startCamera()"
+                            class="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-organic-stone hover:border-organic-green hover:bg-organic-mist/10 transition-all duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="mb-3 text-organic-green group-hover:text-emerald-200 group-hover:scale-110 transition-transform">
+                                <path
+                                    d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z">
+                                </path>
+                                <circle cx="12" cy="13" r="3"></circle>
+                            </svg>
+                            <span class="font-semibold text-organic-text group-hover:text-white">Snap Photo</span>
                         </button>
+                        <label for="file-upload"
+                            class="cursor-pointer group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-organic-stone hover:border-teal-400 hover:bg-organic-mist/10 transition-all duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="mb-3 text-teal-300 group-hover:text-teal-200 group-hover:scale-110 transition-transform">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" x2="12" y1="3" y2="15"></line>
+                            </svg>
+                            <span class="font-semibold text-organic-text group-hover:text-white">Upload</span>
+                            <input id="file-upload" name="file-upload" type="file" class="sr-only" accept="image/*"
+                                (change)="onFileSelected($event)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            }
+            @case ('capturing') {
+            <div class="w-full max-w-md mx-auto animate-fade-in">
+                <div class="relative rounded-2xl overflow-hidden shadow-2xl border border-organic-mist-light">
+                    <video #videoElement autoplay playsinline class="w-full bg-black"></video>
+                </div>
+                <div class="mt-6 flex gap-4 justify-center items-center">
+                    <button (click)="capturePhoto()"
+                        class="px-8 py-4 rounded-full font-bold text-organic-dark shadow-lg bg-gradient-to-r from-organic-green to-teal-700 hover:scale-105 transition-transform flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Capture
+                    </button>
+                    <button (click)="switchCamera()"
+                        class="p-4 rounded-full bg-organic-mist/30 text-organic-text shadow-lg border border-organic-mist-light hover:bg-organic-mist/50 transition-colors backdrop-blur-md"
+                        title="Switch Camera">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+                            <path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" />
+                            <path d="m20 12-3-3-3 3" />
+                            <path d="m4 12 3 3 3-3" />
+                        </svg>
+                    </button>
+                    <button (click)="stopCamera()"
+                        class="px-6 py-4 rounded-full font-semibold bg-organic-mist/80 text-organic-text hover:bg-organic-mist-light/80 transition-colors backdrop-blur-md border border-organic-mist-light">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+            }
+            @case ('checking') {
+            <div class="flex flex-col items-center justify-center animate-fade-in py-12">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-organic-green blur-xl opacity-20 animate-pulse rounded-full"></div>
+                    <svg class="relative animate-spin h-16 w-16 text-organic-green" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="mt-6 text-xl text-organic-text font-medium">Checking photo quality...</p>
+            </div>
+            }
+            @case ('validating') {
+            <div class="flex flex-col items-center justify-center animate-fade-in py-12">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-teal-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
+                    <svg class="relative animate-spin h-16 w-16 text-teal-400" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="mt-6 text-xl text-organic-text font-medium">AI is validating image context...</p>
+            </div>
+            }
+            @case ('preview') {
+            <div class="w-full max-w-md mx-auto space-y-6 animate-fade-in">
+                <div
+                    class="relative rounded-2xl overflow-hidden shadow-2xl border border-organic-mist-light bg-black/50 backdrop-blur-sm p-2">
+                    <img [src]="previewUrl()" alt="Selected photo preview"
+                        class="rounded-xl w-full object-contain max-h-[50vh]">
+                </div>
+
+                @if (blurWarning()) {
+                <div class="bg-yellow-900/80 border-l-4 border-yellow-500 text-yellow-100 p-4 rounded-xl text-left backdrop-blur-md shadow-lg"
+                    role="alert">
+                    <p class="font-bold flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                            </path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        Blur Guard
+                    </p>
+                    <p class="text-sm mt-1">This photo looks a bit blurry. You can still upload it, or try another one!
+                    </p>
+                </div>
+                }
+
+                <div
+                    class="text-left bg-organic-mist/30 backdrop-blur-md rounded-xl p-4 border border-organic-mist-light">
+                    <label for="guestNote" class="block text-sm font-medium leading-6 text-organic-green">Leave a note
+                        for
+                        the couple?</label>
+                    <div class="mt-2">
+                        <textarea id="guestNote" name="guestNote" rows="3" [(ngModel)]="guestNote"
+                            class="block w-full rounded-lg border-0 bg-black/30 py-3 px-4 text-organic-text shadow-inner ring-1 ring-inset ring-organic-mist-light placeholder:text-organic-stone/50 focus:ring-2 focus:ring-inset focus:ring-organic-green sm:text-sm sm:leading-6 transition-all"
+                            placeholder="e.g., What a beautiful day! So happy for you both."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    @if(isGeminiConfigured) {
+                    <button (click)="generateCaption()" [disabled]="isGeneratingCaption()"
+                        class="w-full flex-1 px-4 py-3.5 rounded-xl font-semibold border border-organic-mist-light text-organic-text hover:bg-organic-mist/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md shadow-lg">
+                        @if (isGeneratingCaption()) {
+                        <span class="flex items-center justify-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            Generating...
+                        </span>
+                        } @else {
+                        ✨ Generate Caption
                         }
-                        <button (click)="uploadPhoto()" class="w-full flex-1 px-4 py-3.5 rounded-xl font-bold text-white shadow-lg bg-gradient-to-r from-indigo-500 to-pink-500 hover:scale-105 transition-transform">Upload</button>
-                    </div>
-                    <button (click)="resetPreview()" class="text-sm text-slate-400 hover:text-white transition-colors py-2">Choose a different photo</button>
-                    </div>
-                }
-                @case ('captioning') {
-                    <div class="flex flex-col items-center justify-center animate-fade-in py-12">
-                        <div class="relative">
-                            <div class="absolute inset-0 bg-purple-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
-                            <svg class="relative animate-spin h-16 w-16 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        </div>
-                        <p class="mt-6 text-xl text-white font-medium">AI is writing a caption...</p>
-                    </div>
-                }
-                @case ('uploading') {
-                    <div class="animate-fade-in py-12">
-                    <div class="relative mx-auto w-16 h-16">
-                        <div class="absolute inset-0 bg-pink-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
-                        <svg class="relative animate-spin h-16 w-16 text-pink-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    </div>
-                    <p class="mt-6 text-xl text-white font-medium">Uploading your photo...</p>
-                    </div>
-                }
-                @case ('success') {
-                    <div class="animate-fade-in text-center w-full max-w-md py-8">
-                    <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 mb-6 border border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-green-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    </div>
-                    <h2 class="text-4xl font-bold text-white mb-2">Thank You!</h2>
-                    <p class="text-lg text-slate-300 mb-8">Your photo has been added to the collection.</p>
-                    
-                    <div class="space-y-4 bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
-                        @if (isShareApiAvailable) {
-                        <div>
-                            <h3 class="font-semibold mb-2 text-indigo-200">Share the Love!</h3>
-                            <p class="text-sm text-slate-400 mb-4">Invite others to add their photos to the album.</p>
-                            <button (click)="shareToSocials()" class="w-full flex justify-center items-center gap-2 rounded-xl bg-slate-700/50 px-4 py-3.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-slate-600/50 transition-colors border border-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" x2="12" y1="2" y2="15"></line></svg>
+                    </button>
+                    }
+                    <button (click)="uploadPhoto()"
+                        class="w-full flex-1 px-4 py-3.5 rounded-xl font-bold text-organic-dark shadow-lg bg-gradient-to-r from-organic-green to-teal-700 hover:scale-105 transition-transform">Upload</button>
+                </div>
+                <button (click)="resetPreview()"
+                    class="text-sm text-organic-stone hover:text-organic-text transition-colors py-2">Choose a different
+                    photo</button>
+            </div>
+            }
+            @case ('captioning') {
+            <div class="flex flex-col items-center justify-center animate-fade-in py-12">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-teal-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
+                    <svg class="relative animate-spin h-16 w-16 text-teal-400" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="mt-6 text-xl text-organic-text font-medium">AI is writing a caption...</p>
+            </div>
+            }
+            @case ('uploading') {
+            <div class="animate-fade-in py-12">
+                <div class="relative mx-auto w-16 h-16">
+                    <div class="absolute inset-0 bg-pink-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
+                    <svg class="relative animate-spin h-16 w-16 text-pink-500" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="mt-6 text-xl text-organic-text font-medium">Uploading your photo...</p>
+            </div>
+            }
+            @case ('success') {
+            <div class="animate-fade-in text-center w-full max-w-md py-8">
+                <div
+                    class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 mb-6 border border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-green-400">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h2 class="text-4xl font-bold text-organic-text mb-2">Thank You!</h2>
+                <p class="text-lg text-organic-stone mb-8">Your photo has been added to the collection.</p>
+
+                <div
+                    class="space-y-4 bg-organic-mist/10 backdrop-blur-md rounded-2xl p-6 border border-organic-mist-light">
+                    @if (isShareApiAvailable) {
+                    <div>
+                        <h3 class="font-semibold mb-2 text-organic-green">Share the Love!</h3>
+                        <p class="text-sm text-organic-stone mb-4">Invite others to add their photos to the album.</p>
+                        <button (click)="shareToSocials()"
+                            class="w-full flex justify-center items-center gap-2 rounded-xl bg-organic-mist/50 px-4 py-3.5 text-sm font-semibold leading-6 text-organic-text shadow-sm hover:bg-organic-mist-light/50 transition-colors border border-organic-mist-light">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                <polyline points="16 6 12 2 8 6"></polyline>
+                                <line x1="12" x2="12" y1="2" y2="15"></line>
+                            </svg>
                             Share Gallery Link
-                            </button>
-                        </div>
-                        }
-
-                        <button (click)="uploadAnother()" class="w-full px-6 py-3.5 rounded-xl font-bold text-white shadow-lg bg-gradient-to-r from-indigo-500 to-pink-500 hover:scale-105 transition-transform">
-                        Upload Another Photo
                         </button>
                     </div>
-                    </div>
-                }
-                }
+                    }
+
+                    <button (click)="uploadAnother()"
+                        class="w-full px-6 py-3.5 rounded-xl font-bold text-organic-dark shadow-lg bg-gradient-to-r from-organic-green to-teal-700 hover:scale-105 transition-transform">
+                        Upload Another Photo
+                    </button>
+                </div>
+            </div>
+            }
+            }
             }
         </div>
-      } @else {
+        } @else {
         <div class="flex flex-col items-center justify-center min-h-[50vh] animate-fade-in">
-            <div class="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-2xl max-w-sm">
-                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-800/50 mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <div
+                class="bg-organic-mist/30 backdrop-blur-md p-8 rounded-3xl border border-organic-mist-light shadow-2xl max-w-sm">
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-organic-mist/50 mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-organic-stone">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
                 </div>
-                <h2 class="text-3xl font-bold mb-4 text-white">Event Not Found</h2>
-                <p class="text-slate-300 mb-8">We couldn't find the event you're looking for. It might have been deleted or the link is incorrect.</p>
-                <button (click)="resetApp()" class="w-full px-8 py-3.5 rounded-xl font-semibold bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 transition-colors">
+                <h2 class="text-3xl font-bold mb-4 text-organic-text">Event Not Found</h2>
+                <p class="text-organic-stone mb-8">We couldn't find the event you're looking for. It might have been
+                    deleted
+                    or the link is incorrect.</p>
+                <button (click)="resetApp()"
+                    class="w-full px-8 py-3.5 rounded-xl font-semibold bg-organic-green text-organic-dark shadow-lg hover:bg-emerald-400 transition-colors">
                     Go Home
                 </button>
             </div>
         </div>
-      }
-  </div>
+        }
+    </div>
 
-  <footer class="absolute bottom-4 text-center w-full z-10">
-    @if (isHost) {
-        <button (click)="resetApp()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
+    <footer class="absolute bottom-4 text-center w-full z-10">
+        @if (isHost) {
+        <button (click)="resetApp()"
+            class="text-xs text-organic-stone hover:text-organic-text transition-colors bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
             Back to Host View
         </button>
-    }
-  </footer>
+        }
+    </footer>
 </div>
